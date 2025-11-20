@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional
 import os
+import json
 
 app = FastAPI()
 
@@ -14,25 +15,29 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 使用 Vercel KV 存储
-try:
-    from vercel_kv import kv
-    USE_KV = True
-except ImportError:
-    USE_KV = False
-    # Fallback to in-memory storage for local development
+# 使用 Redis 存储
+REDIS_URL = os.getenv("REDIS_URL")
+
+if REDIS_URL:
+    import redis
+    r = redis.from_url(REDIS_URL, decode_responses=True)
+    USE_REDIS = True
+else:
+    USE_REDIS = False
     _memory_store = {"cards": [], "categories": [], "next_card_id": 1, "next_category_id": 1}
 
 def get_data(key):
-    if USE_KV:
-        data = kv.get(key)
-        return data if data else ([] if 'list' in key else 1)
+    if USE_REDIS:
+        data = r.get(key)
+        if data:
+            return json.loads(data)
+        return [] if 'list' in key else 1
     else:
         return _memory_store.get(key, [] if 'list' in key else 1)
 
 def set_data(key, value):
-    if USE_KV:
-        kv.set(key, value)
+    if USE_REDIS:
+        r.set(key, json.dumps(value, ensure_ascii=False))
     else:
         _memory_store[key] = value
 
