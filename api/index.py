@@ -1,19 +1,7 @@
-from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-from typing import List, Optional
-import os
+from http.server import BaseHTTPRequestHandler
 import json
-
-app = FastAPI()
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+import os
+import urllib.parse
 
 # 使用 Redis 存储
 REDIS_URL = os.getenv("REDIS_URL")
@@ -24,7 +12,7 @@ if REDIS_URL:
     USE_REDIS = True
 else:
     USE_REDIS = False
-    _memory_store = {"cards": [], "categories": [], "next_card_id": 1, "next_category_id": 1}
+    _memory_store = {}
 
 def get_data(key):
     if USE_REDIS:
@@ -41,106 +29,120 @@ def set_data(key, value):
     else:
         _memory_store[key] = value
 
-# Pydantic Schemas
-class CategoryBase(BaseModel):
-    name: str
+class handler(BaseHTTPRequestHandler):
+    def _set_headers(self, status=200):
+        self.send_response(status)
+        self.send_header('Content-type', 'application/json')
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+        self.send_header('Access-Control-Allow-Headers', '*')
+        self.end_headers()
 
-class CategoryCreate(CategoryBase):
-    pass
+    def do_OPTIONS(self):
+        self._set_headers()
 
-class CategoryResponse(CategoryBase):
-    id: int
+    def do_GET(self):
+        path = self.path
+        
+        if path == '/api/cards':
+            cards = get_data("cards_list") or []
+            self._set_headers()
+            self.wfile.write(json.dumps(cards).encode())
+        elif path == '/api/categories':
+            categories = get_data("categories_list") or []
+            self._set_headers()
+            self.wfile.write(json.dumps(categories).encode())
+        else:
+            self._set_headers(404)
+            self.wfile.write(json.dumps({"error": "Not found"}).encode())
 
-class CardBase(BaseModel):
-    title: str
-    content: str
-    is_favorite: bool = False
-    category_id: Optional[int] = None
+    def do_POST(self):
+        content_length = int(self.headers['Content-Length'])
+        post_data = self.rfile.read(content_length)
+        data = json.loads(post_data.decode('utf-8'))
+        
+        path = self.path
+        
+        if path == '/api/cards':
+            cards = get_data("cards_list") or []
+            next_id = get_data("next_card_id") or 1
+            
+            new_card = {
+                "id": next_id,
+                "title": data.get("title", ""),
+                "content": data.get("content", ""),
+                "is_favorite": data.get("is_favorite", False),
+                "category_id": data.get("category_id")
+            }
+            cards.append(new_card)
+            set_data("cards_list", cards)
+            set_data("next_card_id", next_id + 1)
+            
+            self._set_headers()
+            self.wfile.write(json.dumps(new_card).encode())
+            
+        elif path == '/api/categories':
+            categories = get_data("categories_list") or []
+            next_id = get_data("next_category_id") or 1
+            
+            new_category = {
+                "id": next_id,
+                "name": data.get("name", "")
+            }
+            categories.append(new_category)
+            set_data("categories_list", categories)
+            set_data("next_category_id", next_id + 1)
+            
+            self._set_headers()
+            self.wfile.write(json.dumps(new_category).encode())
+        else:
+            self._set_headers(404)
+            self.wfile.write(json.dumps({"error": "Not found"}).encode())
 
-class CardCreate(CardBase):
-    pass
+    def do_PUT(self):
+        content_length = int(self.headers['Content-Length'])
+        post_data = self.rfile.read(content_length)
+        data = json.loads(post_data.decode('utf-8'))
+        
+        # Extract card_id from path like /api/cards/1
+        path_parts = self.path.split('/')
+        if len(path_parts) >= 4 and path_parts[2] == 'cards':
+            card_id = int(path_parts[3])
+            cards = get_data("cards_list") or []
+            
+            for card in cards:
+                if card['id'] == card_id:
+                    if 'title' in data:
+                        card['title'] = data['title']
+                    if 'content' in data:
+                        card['content'] = data['content']
+                    if 'is_favorite' in data:
+                        card['is_favorite'] = data['is_favorite']
+                    if 'category_id' in data:
+                        card['category_id'] = data['category_id']
+                    
+                    set_data("cards_list", cards)
+                    self._set_headers()
+                    self.wfile.write(json.dumps(card).encode())
+                    return
+            
+            self._set_headers(404)
+            self.wfile.write(json.dumps({"error": "Card not found"}).encode())
+        else:
+            self._set_headers(404)
+            self.wfile.write(json.dumps({"error": "Not found"}).encode())
 
-class CardUpdate(BaseModel):
-    title: Optional[str] = None
-    content: Optional[str] = None
-    is_favorite: Optional[bool] = None
-    category_id: Optional[int] = None
-
-class CardResponse(CardBase):
-    id: int
-
-# Routes
-@app.post("/api/categories", response_model=CategoryResponse)
-def create_category(category: CategoryCreate):
-    categories = get_data("categories_list") or []
-    
-    if any(c['name'] == category.name for c in categories):
-        raise HTTPException(status_code=400, detail="Category already exists")
-    
-    next_id = get_data("next_category_id") or 1
-    new_category = {
-        "id": next_id,
-        "name": category.name
-    }
-    categories.append(new_category)
-    set_data("categories_list", categories)
-    set_data("next_category_id", next_id + 1)
-    
-    return new_category
-
-@app.get("/api/categories", response_model=List[CategoryResponse])
-def read_categories():
-    return get_data("categories_list") or []
-
-@app.post("/api/cards", response_model=CardResponse)
-def create_card(card: CardCreate):
-    cards = get_data("cards_list") or []
-    next_id = get_data("next_card_id") or 1
-    
-    new_card = {
-        "id": next_id,
-        "title": card.title,
-        "content": card.content,
-        "is_favorite": card.is_favorite,
-        "category_id": card.category_id
-    }
-    cards.append(new_card)
-    set_data("cards_list", cards)
-    set_data("next_card_id", next_id + 1)
-    
-    return new_card
-
-@app.get("/api/cards", response_model=List[CardResponse])
-def read_cards():
-    return get_data("cards_list") or []
-
-@app.put("/api/cards/{card_id}", response_model=CardResponse)
-def update_card(card_id: int, card: CardUpdate):
-    cards = get_data("cards_list") or []
-    
-    card_index = next((i for i, c in enumerate(cards) if c['id'] == card_id), None)
-    if card_index is None:
-        raise HTTPException(status_code=404, detail="Card not found")
-    
-    update_data = card.dict(exclude_unset=True)
-    cards[card_index].update(update_data)
-    set_data("cards_list", cards)
-    
-    return cards[card_index]
-
-@app.delete("/api/cards/{card_id}")
-def delete_card(card_id: int):
-    cards = get_data("cards_list") or []
-    
-    card_index = next((i for i, c in enumerate(cards) if c['id'] == card_id), None)
-    if card_index is None:
-        raise HTTPException(status_code=404, detail="Card not found")
-    
-    cards.pop(card_index)
-    set_data("cards_list", cards)
-    
-    return {"ok": True}
-
-# Vercel serverless function handler
-from mangum import Mangum
-handler = Mangum(app)
+    def do_DELETE(self):
+        path_parts = self.path.split('/')
+        if len(path_parts) >= 4 and path_parts[2] == 'cards':
+            card_id = int(path_parts[3])
+            cards = get_data("cards_list") or []
+            
+            cards = [c for c in cards if c['id'] != card_id]
+            set_data("cards_list", cards)
+            
+            self._set_headers()
+            self.wfile.write(json.dumps({"ok": True}).encode())
+        else:
+            self._set_headers(404)
+            self.wfile.write(json.dumps({"error": "Not found"}).encode())
