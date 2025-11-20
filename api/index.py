@@ -2,7 +2,6 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional
-import json
 import os
 
 app = FastAPI()
@@ -15,18 +14,27 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 使用 JSON 文件存储（Vercel 不支持 SQLite）
-DATA_FILE = "/tmp/cards_data.json"
+# 使用 Vercel KV 存储
+try:
+    from vercel_kv import kv
+    USE_KV = True
+except ImportError:
+    USE_KV = False
+    # Fallback to in-memory storage for local development
+    _memory_store = {"cards": [], "categories": [], "next_card_id": 1, "next_category_id": 1}
 
-def load_data():
-    if os.path.exists(DATA_FILE):
-        with open(DATA_FILE, 'r', encoding='utf-8') as f:
-            return json.load(f)
-    return {"cards": [], "categories": [], "next_card_id": 1, "next_category_id": 1}
+def get_data(key):
+    if USE_KV:
+        data = kv.get(key)
+        return data if data else ([] if 'list' in key else 1)
+    else:
+        return _memory_store.get(key, [] if 'list' in key else 1)
 
-def save_data(data):
-    with open(DATA_FILE, 'w', encoding='utf-8') as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
+def set_data(key, value):
+    if USE_KV:
+        kv.set(key, value)
+    else:
+        _memory_store[key] = value
 
 # Pydantic Schemas
 class CategoryBase(BaseModel):
@@ -59,73 +67,72 @@ class CardResponse(CardBase):
 # Routes
 @app.post("/api/categories", response_model=CategoryResponse)
 def create_category(category: CategoryCreate):
-    data = load_data()
+    categories = get_data("categories_list") or []
     
-    # Check if category exists
-    if any(c['name'] == category.name for c in data['categories']):
+    if any(c['name'] == category.name for c in categories):
         raise HTTPException(status_code=400, detail="Category already exists")
     
+    next_id = get_data("next_category_id") or 1
     new_category = {
-        "id": data['next_category_id'],
+        "id": next_id,
         "name": category.name
     }
-    data['categories'].append(new_category)
-    data['next_category_id'] += 1
-    save_data(data)
+    categories.append(new_category)
+    set_data("categories_list", categories)
+    set_data("next_category_id", next_id + 1)
     
     return new_category
 
 @app.get("/api/categories", response_model=List[CategoryResponse])
 def read_categories():
-    data = load_data()
-    return data['categories']
+    return get_data("categories_list") or []
 
 @app.post("/api/cards", response_model=CardResponse)
 def create_card(card: CardCreate):
-    data = load_data()
+    cards = get_data("cards_list") or []
+    next_id = get_data("next_card_id") or 1
     
     new_card = {
-        "id": data['next_card_id'],
+        "id": next_id,
         "title": card.title,
         "content": card.content,
         "is_favorite": card.is_favorite,
         "category_id": card.category_id
     }
-    data['cards'].append(new_card)
-    data['next_card_id'] += 1
-    save_data(data)
+    cards.append(new_card)
+    set_data("cards_list", cards)
+    set_data("next_card_id", next_id + 1)
     
     return new_card
 
 @app.get("/api/cards", response_model=List[CardResponse])
 def read_cards():
-    data = load_data()
-    return data['cards']
+    return get_data("cards_list") or []
 
 @app.put("/api/cards/{card_id}", response_model=CardResponse)
 def update_card(card_id: int, card: CardUpdate):
-    data = load_data()
+    cards = get_data("cards_list") or []
     
-    card_index = next((i for i, c in enumerate(data['cards']) if c['id'] == card_id), None)
+    card_index = next((i for i, c in enumerate(cards) if c['id'] == card_id), None)
     if card_index is None:
         raise HTTPException(status_code=404, detail="Card not found")
     
     update_data = card.dict(exclude_unset=True)
-    data['cards'][card_index].update(update_data)
-    save_data(data)
+    cards[card_index].update(update_data)
+    set_data("cards_list", cards)
     
-    return data['cards'][card_index]
+    return cards[card_index]
 
 @app.delete("/api/cards/{card_id}")
 def delete_card(card_id: int):
-    data = load_data()
+    cards = get_data("cards_list") or []
     
-    card_index = next((i for i, c in enumerate(data['cards']) if c['id'] == card_id), None)
+    card_index = next((i for i, c in enumerate(cards) if c['id'] == card_id), None)
     if card_index is None:
         raise HTTPException(status_code=404, detail="Card not found")
     
-    data['cards'].pop(card_index)
-    save_data(data)
+    cards.pop(card_index)
+    set_data("cards_list", cards)
     
     return {"ok": True}
 
