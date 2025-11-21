@@ -67,12 +67,17 @@ class handler(BaseHTTPRequestHandler):
             cards = get_data("cards_list") or []
             next_id = get_data("next_card_id") or 1
             
+            from datetime import datetime
+            now = datetime.utcnow().isoformat() + 'Z'
+            
             new_card = {
                 "id": next_id,
                 "title": data.get("title", ""),
                 "content": data.get("content", ""),
                 "is_favorite": data.get("is_favorite", False),
-                "category_id": data.get("category_id")
+                "category_id": data.get("category_id"),
+                "created_at": now,
+                "updated_at": now
             }
             cards.append(new_card)
             set_data("cards_list", cards)
@@ -113,6 +118,9 @@ class handler(BaseHTTPRequestHandler):
             if resource_type == 'cards':
                 cards = get_data("cards_list") or []
                 
+                from datetime import datetime
+                now = datetime.utcnow().isoformat() + 'Z'
+                
                 for card in cards:
                     if card['id'] == resource_id:
                         if 'title' in data:
@@ -123,6 +131,9 @@ class handler(BaseHTTPRequestHandler):
                             card['is_favorite'] = data['is_favorite']
                         if 'category_id' in data:
                             card['category_id'] = data['category_id']
+                        
+                        # 更新时间戳
+                        card['updated_at'] = now
                         
                         set_data("cards_list", cards)
                         self._set_headers()
