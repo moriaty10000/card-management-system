@@ -12,11 +12,20 @@
 
     <style>
         :root {
+            /* Dark Mode (Default) */
             --bg-main: #08090B;
+            --bg-card: #15181E;
             --card-bg-gradient: linear-gradient(145deg, #15181E, #0C0E11);
             --text-main: #E6E6E6;
             --text-sub: #788296;
             --border-color: rgba(255, 255, 255, 0.06);
+            --header-bg: rgba(8, 9, 11, 0.85);
+            --modal-bg: #101216;
+            --input-bg: rgba(255, 255, 255, 0.05);
+            --icon-btn-bg: rgba(255, 255, 255, 0.03);
+            --icon-btn-active: rgba(255, 255, 255, 0.1);
+            --card-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+
             --safe-area-top: env(safe-area-inset-top);
             --safe-area-bottom: env(safe-area-inset-bottom);
 
@@ -33,6 +42,22 @@
             --c-peridot: 154, 205, 50;
         }
 
+        /* Light Mode */
+        .light-mode {
+            --bg-main: #F5F7FA;
+            --bg-card: #FFFFFF;
+            --card-bg-gradient: linear-gradient(145deg, #FFFFFF, #F0F2F5);
+            --text-main: #2D3436;
+            --text-sub: #636E72;
+            --border-color: rgba(0, 0, 0, 0.08);
+            --header-bg: rgba(245, 247, 250, 0.85);
+            --modal-bg: #FFFFFF;
+            --input-bg: rgba(0, 0, 0, 0.04);
+            --icon-btn-bg: rgba(0, 0, 0, 0.04);
+            --icon-btn-active: rgba(0, 0, 0, 0.08);
+            --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
         * {
             box-sizing: border-box;
             margin: 0;
@@ -47,6 +72,7 @@
             color: var(--text-main);
             min-height: 100vh;
             overflow-x: hidden;
+            transition: background-color 0.3s, color 0.3s;
         }
 
         .filter-item {
@@ -111,6 +137,7 @@
             background: radial-gradient(circle, rgba(var(--c-gold), 0.06), transparent 70%);
             filter: blur(60px);
             z-index: -1;
+            transition: opacity 0.3s;
         }
 
         .ambient-bottom {
@@ -122,6 +149,7 @@
             background: radial-gradient(circle, rgba(var(--c-blue), 0.08), transparent 70%);
             filter: blur(70px);
             z-index: -1;
+            transition: opacity 0.3s;
         }
 
         header {
@@ -129,12 +157,13 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: rgba(8, 9, 11, 0.85);
+            background: var(--header-bg);
             backdrop-filter: blur(12px);
             z-index: 100;
             position: sticky;
             top: 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            border-bottom: 1px solid var(--border-color);
+            transition: background-color 0.3s, border-color 0.3s;
         }
 
         .brand {
@@ -156,13 +185,9 @@
             font-family: 'Playfair Display', serif;
             font-size: 32px;
             font-weight: 700;
-            color: #fff;
+            color: var(--text-main);
             letter-spacing: 1px;
             line-height: 1.1;
-            background: linear-gradient(to right, #fff, #aaa);
-            background-clip: text;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
         }
 
         .header-actions {
@@ -174,7 +199,7 @@
             width: 40px;
             height: 40px;
             border-radius: 12px;
-            background: rgba(255, 255, 255, 0.03);
+            background: var(--icon-btn-bg);
             border: 1px solid var(--border-color);
             display: flex;
             align-items: center;
@@ -185,7 +210,7 @@
         }
 
         .icon-btn:active {
-            background: rgba(255, 255, 255, 0.1);
+            background: var(--icon-btn-active);
         }
 
         .filter-scroll {
@@ -651,9 +676,10 @@
             padding: 28px 24px;
             position: relative;
             border: 1px solid var(--border-color);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            box-shadow: var(--card-shadow);
             overflow: hidden;
             cursor: pointer;
+            transition: transform 0.1s, box-shadow 0.3s, background 0.3s, border-color 0.3s;
         }
 
         .card:active {
@@ -671,12 +697,12 @@
             font-family: 'Playfair Display', serif;
             font-size: 18px;
             font-weight: 600;
-            color: #fff;
+            color: var(--text-main);
             letter-spacing: 0.5px;
         }
 
         .card-icon {
-            color: #333;
+            color: var(--text-sub);
             cursor: pointer;
             transition: color 0.2s;
             font-size: 16px;
@@ -691,7 +717,7 @@
         .card-body {
             font-size: 13px;
             line-height: 1.8;
-            color: #8A96A3;
+            color: var(--text-sub);
             font-weight: 300;
             margin-bottom: 24px;
             display: -webkit-box;
@@ -704,7 +730,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-top: 1px solid rgba(255, 255, 255, 0.04);
+            border-top: 1px solid var(--border-color);
             padding-top: 16px;
         }
 
@@ -723,7 +749,7 @@
 
         .time-text {
             font-size: 11px;
-            color: #555;
+            color: var(--text-sub);
             font-family: 'Inter', sans-serif;
         }
 
@@ -742,9 +768,9 @@
             width: 64px;
             height: 64px;
             border-radius: 50%;
-            background: #08090B;
+            background: var(--bg-main);
             border: 1px solid rgba(var(--c-blue), 0.5);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.8), 0 0 15px rgba(var(--c-blue), 0.3);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4), 0 0 15px rgba(var(--c-blue), 0.3);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -752,7 +778,7 @@
             font-size: 22px;
             z-index: 99;
             animation: pulse-blue 3s infinite;
-            transition: transform 0.2s;
+            transition: transform 0.2s, background-color 0.3s;
             cursor: pointer;
         }
 
@@ -785,15 +811,15 @@
         }
 
         .modal-content {
-            background: #101216;
+            background: var(--modal-bg);
             width: 85%;
             max-width: 340px;
             border-radius: 8px;
             border: 1px solid var(--border-color);
             padding: 24px;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
             transform: translateY(20px);
-            transition: transform 0.3s;
+            transition: transform 0.3s, background-color 0.3s;
         }
 
         .modal-overlay.show .modal-content {
@@ -803,8 +829,10 @@
         .modal-title {
             font-family: 'Playfair Display', serif;
             font-size: 20px;
-            color: #fff;
-            margin-bottom: 20px;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 24px;
+            text-align: center;
         }
 
         .input-group {
@@ -812,15 +840,25 @@
         }
 
         .modal-input,
-        .modal-textarea {
+        .modal-textarea,
+        .category-select {
             width: 100%;
-            background: #08090B;
+            background: var(--input-bg);
             border: 1px solid var(--border-color);
-            padding: 12px;
-            color: #fff;
             border-radius: 4px;
-            font-size: 14px;
+            padding: 12px;
+            color: var(--text-main);
             font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            transition: all 0.3s;
+            appearance: none;
+        }
+
+        .modal-input:focus,
+        .modal-textarea:focus,
+        .category-select:focus {
+            border-color: rgba(var(--c-gold), 0.5);
+            background: rgba(var(--c-gold), 0.05);
         }
 
         .modal-textarea {
@@ -828,16 +866,10 @@
             resize: vertical;
         }
 
-        .modal-input:focus,
-        .modal-textarea:focus {
-            border-color: rgb(var(--c-blue));
-            outline: none;
-        }
-
         .color-grid {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
-            gap: 10px;
+            gap: 12px;
             margin-bottom: 24px;
         }
 
@@ -846,59 +878,66 @@
             height: 30px;
             border-radius: 50%;
             cursor: pointer;
-            border: 2px solid transparent;
             transition: transform 0.2s;
+            position: relative;
         }
 
-        .color-option.selected {
-            transform: scale(1.2);
-            border-color: #fff;
+        .color-option.selected::after {
+            content: '';
+            position: absolute;
+            top: -4px;
+            left: -4px;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            border: 2px solid var(--text-main);
         }
 
         .bg-gold {
-            background-color: rgb(200, 170, 110);
+            background: rgb(var(--c-gold));
         }
 
         .bg-blue {
-            background-color: rgb(0, 147, 255);
+            background: rgb(var(--c-blue));
         }
 
         .bg-crimson {
-            background-color: rgb(255, 71, 87);
+            background: rgb(var(--c-crimson));
         }
 
         .bg-purple {
-            background-color: rgb(165, 94, 234);
+            background: rgb(var(--c-purple));
         }
 
         .bg-emerald {
-            background-color: rgb(46, 213, 115);
+            background: rgb(var(--c-emerald));
         }
 
         .bg-silver {
-            background-color: rgb(192, 192, 192);
+            background: rgb(var(--c-silver));
         }
 
         .bg-turquoise {
-            background-color: rgb(64, 224, 208);
+            background: rgb(var(--c-turquoise));
         }
 
         .bg-amber {
-            background-color: rgb(255, 191, 0);
+            background: rgb(var(--c-amber));
         }
 
         .bg-ruby {
-            background-color: rgb(224, 17, 95);
+            background: rgb(var(--c-ruby));
         }
 
         .bg-peridot {
-            background-color: rgb(154, 205, 50);
+            background: rgb(var(--c-peridot));
         }
 
         .modal-actions {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            margin-top: 30px;
         }
 
         .modal-right-btns {
@@ -916,96 +955,89 @@
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, rgb(var(--c-blue)), #0056B3);
+            background: var(--text-main);
+            color: var(--bg-main);
             border: none;
-            color: #fff;
             padding: 8px 20px;
             border-radius: 4px;
             font-size: 14px;
+            font-weight: 600;
             cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .btn-primary:active {
+            opacity: 0.8;
         }
 
         .btn-delete {
-            color: rgb(var(--c-crimson));
             background: none;
             border: none;
-            font-size: 14px;
+            color: rgb(var(--c-crimson));
+            font-size: 12px;
             cursor: pointer;
-            padding: 8px;
-            display: none;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
         }
 
         .btn-delete.visible {
-            display: block;
+            opacity: 1;
+            pointer-events: auto;
         }
 
-        .category-select {
-            width: 100%;
-            background: #08090B;
-            border: 1px solid var(--border-color);
-            padding: 12px;
-            color: #fff;
-            border-radius: 4px;
-            font-size: 14px;
-            font-family: 'Inter', sans-serif;
-            cursor: pointer;
-        }
-
-        .category-select:focus {
-            border-color: rgb(var(--c-blue));
-            outline: none;
-        }
-
+        /* 搜索样式 */
         .search-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(8, 9, 11, 0.98);
-            z-index: 150;
-            display: none;
-            padding: 20px;
+            background: var(--bg-main);
+            z-index: 300;
+            padding: 80px 24px;
+            transform: translateY(100%);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            flex-direction: column;
         }
 
         .search-overlay.show {
-            display: block;
-        }
-
-        .search-box {
-            width: 100%;
-            background: #15181E;
-            border: 1px solid var(--border-color);
-            padding: 16px;
-            color: #fff;
-            border-radius: 8px;
-            font-size: 16px;
-            margin-bottom: 20px;
-        }
-
-        .search-box:focus {
-            border-color: rgb(var(--c-blue));
-            outline: none;
-        }
-
-        .search-results {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
+            transform: translateY(0);
         }
 
         .close-search {
             position: absolute;
-            top: 20px;
-            right: 20px;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.05);
+            top: 24px;
+            right: 24px;
+            background: none;
             border: none;
-            color: #fff;
-            font-size: 18px;
+            color: var(--text-sub);
+            font-size: 24px;
             cursor: pointer;
+        }
+
+        .search-box {
+            width: 100%;
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid var(--border-color);
+            padding: 15px 0;
+            font-family: 'Playfair Display', serif;
+            font-size: 24px;
+            color: var(--text-main);
+            margin-bottom: 30px;
+        }
+
+        .search-results {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
         }
     </style>
 </head>
@@ -1024,8 +1056,8 @@
             <div class="icon-btn" id="searchBtn">
                 <i class="fas fa-search"></i>
             </div>
-            <div class="icon-btn" id="logoutBtn">
-                <i class="fas fa-sign-out-alt"></i>
+            <div class="icon-btn" id="themeToggleBtn">
+                <i class="fas fa-moon"></i>
             </div>
         </div>
     </header>
@@ -1040,6 +1072,14 @@
         <div class="empty-state" id="emptyState">
             <i class="fas fa-wind" style="font-size: 24px; margin-bottom: 10px; opacity: 0.5;"></i>
             <p>No items found.</p>
+        </div>
+
+        <!-- Logout Button at the bottom -->
+        <div style="text-align: center; margin-top: 40px; padding-bottom: 20px;">
+            <button id="logoutBtnBottom"
+                style="background: none; border: 1px solid var(--border-color); color: var(--text-sub); padding: 10px 24px; border-radius: 20px; font-size: 12px; cursor: pointer; transition: all 0.3s;">
+                <i class="fas fa-sign-out-alt" style="margin-right: 6px;"></i> Log Out
+            </button>
         </div>
     </div>
 
@@ -1127,7 +1167,8 @@
         const cardList = document.getElementById('cardList');
         const emptyState = document.getElementById('emptyState');
         const fabBtn = document.getElementById('fabBtn');
-        const logoutBtn = document.getElementById('logoutBtn');
+        const themeToggleBtn = document.getElementById('themeToggleBtn');
+        const logoutBtnBottom = document.getElementById('logoutBtnBottom');
         const searchBtn = document.getElementById('searchBtn');
 
         // 分类模态框
@@ -1158,6 +1199,7 @@
         // 初始化
         async function init() {
             try {
+                initTheme();
                 await loadCategories();
                 await loadCards();
                 renderCategories();
@@ -1167,6 +1209,25 @@
                 alert('Failed to load data. Please refresh the page.');
             }
         }
+
+        // Theme Handling
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            if (savedTheme === 'light') {
+                document.body.classList.add('light-mode');
+                themeToggleBtn.innerHTML = '<i class="fas fa-sun"></i>';
+            } else {
+                document.body.classList.remove('light-mode');
+                themeToggleBtn.innerHTML = '<i class="fas fa-moon"></i>';
+            }
+        }
+
+        themeToggleBtn.addEventListener('click', () => {
+            document.body.classList.toggle('light-mode');
+            const isLight = document.body.classList.contains('light-mode');
+            localStorage.setItem('theme', isLight ? 'light' : 'dark');
+            themeToggleBtn.innerHTML = isLight ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+        });
 
         // 加载分类
         async function loadCategories() {
@@ -1242,78 +1303,108 @@
 
         // 渲染卡片
         function renderCards() {
-            cardList.innerHTML = '';
-            let visibleCount = 0;
-
-            const filteredCards = currentFilter === 'all'
-                ? [...cards]
-                : cards.filter(card => card.category_id == currentFilter);
-
-            // 按编辑时间排序（新到旧）
-            filteredCards.sort((a, b) => {
-                const timeA = new Date(a.updated_at || a.created_at || 0);
-                const timeB = new Date(b.updated_at || b.created_at || 0);
+            // Sort cards by updated_at (descending), fallback to created_at
+            const sortedCards = [...cards].sort((a, b) => {
+                const timeA = new Date(a.updated_at || a.created_at).getTime();
+                const timeB = new Date(b.updated_at || b.created_at).getTime();
                 return timeB - timeA;
             });
 
-            filteredCards.forEach(card => {
-                const cardEl = createCardElement(card);
-                cardList.appendChild(cardEl);
-                visibleCount++;
-            });
+            const filteredCards = currentFilter === 'all'
+                ? sortedCards
+                : sortedCards.filter(card => card.category_id == currentFilter);
 
-            if (visibleCount === 0) {
-                cardList.appendChild(emptyState);
+            // Clear card list but keep the logout button container
+            // To do this cleanly, we'll clear everything and re-append
+            cardList.innerHTML = '';
+            let visibleCount = 0;
+
+            if (filteredCards.length === 0) {
                 emptyState.style.display = 'block';
+                cardList.appendChild(emptyState);
             } else {
                 emptyState.style.display = 'none';
+                filteredCards.forEach((card, index) => {
+                    visibleCount++;
+                    const category = categories.find(c => c.id == card.category_id);
+                    const color = category ? colorManager.getColor(category.id) : 'gold'; // Default to gold if uncategorized
+                    const categoryName = category ? category.name : 'DEFAULT';
+
+                    const el = document.createElement('div');
+                    el.className = `card accent-${color} fade-in`;
+                    el.style.animationDelay = `${index * 0.05}s`;
+                    el.onclick = (e) => {
+                        if (!e.target.closest('.card-icon')) {
+                            openCardModal(card.id);
+                        }
+                    };
+
+                    const isStarred = card.is_favorite ? 'starred' : '';
+                    const starIcon = card.is_favorite ? 'fas fa-star' : 'far fa-star';
+
+                    // Format time
+                    const timeStr = formatTime(card.updated_at || card.created_at);
+
+                    el.innerHTML = `
+                        <div class="card-top">
+                            <div class="card-title">${escapeHtml(card.title || '(No Title)')}</div>
+                            <i class="${starIcon} card-icon ${isStarred}" onclick="toggleStar(event, ${card.id})"></i>
+                        </div>
+                        <div class="card-body">${escapeHtml(card.content || '')}</div>
+                        <div class="card-meta">
+                            <div class="tag-pill tag-${color}">
+                                <i class="fas fa-tag" style="font-size: 8px;"></i> ${categoryName}
+                            </div>
+                            <div class="time-text">${timeStr}</div>
+                        </div>
+                    `;
+                    cardList.appendChild(el);
+                });
+            }
+
+            // Re-append logout button container
+            const logoutContainer = document.createElement('div');
+            logoutContainer.style.cssText = "text-align: center; margin-top: 40px; padding-bottom: 20px;";
+            logoutContainer.innerHTML = `
+                <button id="logoutBtnBottom" style="background: none; border: 1px solid var(--border-color); color: var(--text-sub); padding: 10px 24px; border-radius: 20px; font-size: 12px; cursor: pointer; transition: all 0.3s;">
+                    <i class="fas fa-sign-out-alt" style="margin-right: 6px;"></i> Log Out
+                </button>
+            `;
+            cardList.appendChild(logoutContainer);
+
+            // Re-bind event listener since we recreated the button
+            document.getElementById('logoutBtnBottom').addEventListener('click', handleLogout);
+        }
+
+        function handleLogout() {
+            if (confirm('Are you sure you want to log out?')) {
+                localStorage.removeItem('isAuthenticated');
+                window.location.href = '/login.html';
             }
         }
 
-        // 创建卡片元素
-        function createCardElement(card) {
-            const category = categories.find(c => c.id == card.category_id);
-            const color = category ? colorManager.getColor(category.id) : 'gold';
+        // Helper to format time
+        function formatTime(isoString) {
+            if (!isoString) return '';
+            const date = new Date(isoString);
+            const now = new Date();
+            const diff = now - date;
 
-            const cardEl = document.createElement('div');
-            cardEl.className = `card accent-${color} fade-in`;
-            cardEl.setAttribute('data-id', card.id);
-
-            cardEl.innerHTML = `
-                <div class="card-top">
-                    <div class="card-title">${escapeHtml(card.title)}</div>
-                    <i class="${card.is_favorite ? 'fas' : 'far'} fa-star card-icon ${card.is_favorite ? 'starred' : ''}" data-id="${card.id}"></i>
-                </div>
-                <div class="card-body">${escapeHtml(card.content)}</div>
-                <div class="card-meta">
-                    <span class="tag-pill tag-${color}">
-                        <i class="fas fa-tag" style="font-size:8px;"></i> ${category ? category.name : 'DEFAULT'}
-                    </span>
-                    <span class="time-text">${formatTime(card.updated_at || card.created_at)}</span>
-                </div>
-            `;
-
-            // 点击卡片编辑
-            cardEl.addEventListener('click', (e) => {
-                if (!e.target.classList.contains('card-icon')) {
-                    openCardModal(card.id);
-                }
-            });
-
-            // 收藏功能
-            const starIcon = cardEl.querySelector('.card-icon');
-            starIcon.addEventListener('click', async (e) => {
-                e.stopPropagation();
-                await toggleFavorite(card.id, starIcon);
-            });
-
-            return cardEl;
+            // If less than 24 hours, show time
+            if (diff < 24 * 60 * 60 * 1000 && now.getDate() === date.getDate()) {
+                return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            }
+            // Otherwise show date
+            return date.toLocaleDateString();
         }
 
-        // 切换收藏
-        async function toggleFavorite(cardId, starIcon) {
+        // Toggle Star
+        window.toggleStar = async function (e, cardId) {
+            e.stopPropagation();
             const card = cards.find(c => c.id === cardId);
             if (!card) return;
+
+            const starIcon = e.target;
 
             try {
                 starIcon.classList.remove('star-anim');
@@ -1325,12 +1416,11 @@
 
                 card.is_favorite = newFavoriteStatus;
 
+                // Re-render to update UI (or manually update class for performance)
                 if (newFavoriteStatus) {
-                    starIcon.classList.add('starred', 'fas');
-                    starIcon.classList.remove('far');
+                    starIcon.className = 'fas fa-star card-icon starred star-anim';
                 } else {
-                    starIcon.classList.remove('starred', 'fas');
-                    starIcon.classList.add('far');
+                    starIcon.className = 'far fa-star card-icon star-anim';
                 }
             } catch (error) {
                 console.error('Failed to toggle favorite:', error);
@@ -1338,15 +1428,19 @@
             }
         }
 
-        // 筛选处理
-        function handleFilterClick(clickedEl, categoryId) {
-            const allItems = filterScroll.querySelectorAll('.filter-item');
-            allItems.forEach(item => item.className = 'filter-item');
-
-            const color = clickedEl.getAttribute('data-color');
-            clickedEl.classList.add(`active-${color}`);
-
+        // 筛选点击
+        function handleFilterClick(el, categoryId) {
             currentFilter = categoryId;
+
+            // Update UI
+            document.querySelectorAll('.filter-item').forEach(item => {
+                const color = item.getAttribute('data-color');
+                item.className = `filter-item`;
+            });
+
+            const color = el.getAttribute('data-color');
+            el.className = `filter-item active-${color}`;
+
             renderCards();
         }
 
@@ -1551,8 +1645,8 @@
             if (!query) return;
 
             const results = cards.filter(card =>
-                card.title.toLowerCase().includes(query) ||
-                card.content.toLowerCase().includes(query)
+                (card.title && card.title.toLowerCase().includes(query)) ||
+                (card.content && card.content.toLowerCase().includes(query))
             );
 
             results.forEach(card => {
@@ -1565,16 +1659,30 @@
             }
         });
 
-        // 退出登录
-        logoutBtn.addEventListener('click', () => {
-            if (confirm('Are you sure you want to logout?')) {
-                localStorage.removeItem('isAuthenticated');
-                window.location.href = '/login.html';
-            }
-        });
+        // Helper to create card element for search results
+        function createCardElement(card) {
+            const category = categories.find(c => c.id == card.category_id);
+            const color = category ? colorManager.getColor(category.id) : 'gold';
+
+            const el = document.createElement('div');
+            el.className = `card accent-${color}`;
+            el.onclick = () => {
+                openCardModal(card.id);
+                searchOverlay.classList.remove('show');
+            };
+
+            el.innerHTML = `
+                <div class="card-top">
+                    <div class="card-title">${escapeHtml(card.title || '(No Title)')}</div>
+                </div>
+                <div class="card-body">${escapeHtml(card.content || '')}</div>
+            `;
+            return el;
+        }
 
         // HTML 转义
         function escapeHtml(text) {
+            if (!text) return '';
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
