@@ -1246,8 +1246,15 @@
             let visibleCount = 0;
 
             const filteredCards = currentFilter === 'all'
-                ? cards
+                ? [...cards]
                 : cards.filter(card => card.category_id == currentFilter);
+
+            // 按编辑时间排序（新到旧）
+            filteredCards.sort((a, b) => {
+                const timeA = new Date(a.updated_at || a.created_at || 0);
+                const timeB = new Date(b.updated_at || b.created_at || 0);
+                return timeB - timeA;
+            });
 
             filteredCards.forEach(card => {
                 const cardEl = createCardElement(card);
