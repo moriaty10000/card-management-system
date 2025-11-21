@@ -109,15 +109,18 @@ function formatTime(dateString) {
     const diff = now - date;
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
 
+    // 获取时分
+    const hours = date.getHours();
+    const minutes = date.getMinutes();
+    const timeStr = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+
     if (days === 0) {
-        const hours = date.getHours();
-        const minutes = date.getMinutes();
-        return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+        return timeStr;
     } else if (days === 1) {
-        return 'Yesterday';
+        return `Yesterday ${timeStr}`;
     } else if (days < 7) {
-        return `${days} days ago`;
+        return `${days} days ago ${timeStr}`;
     } else {
-        return date.toLocaleDateString();
+        return `${date.toLocaleDateString()} ${timeStr}`;
     }
 }
