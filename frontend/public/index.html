@@ -1478,8 +1478,8 @@
             const content = cardContentInput.value.trim();
             const categoryId = cardCategorySelect.value;
 
-            if (!title || !content) {
-                alert('Please fill in both title and content');
+            if (!title && !content) {
+                alert('Please fill in at least title or content');
                 return;
             }
 
