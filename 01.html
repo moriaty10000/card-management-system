@@ -1,0 +1,1277 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>M System - Editable Tags</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;900&family=Inter:wght@300;400;500;600&display=swap"
+        rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-main: #08090B;
+            --card-bg-gradient: linear-gradient(145deg, #15181E, #0C0E11);
+            --text-main: #E6E6E6;
+            --text-sub: #788296;
+            --border-color: rgba(255, 255, 255, 0.06);
+            --safe-area-top: env(safe-area-inset-top);
+            --safe-area-bottom: env(safe-area-inset-bottom);
+
+            /* === 10种高级宝石配色 (RGB格式) === */
+            --c-gold: 200, 170, 110;
+            /* Champagne */
+            --c-blue: 0, 147, 255;
+            /* Hextech */
+            --c-crimson: 255, 71, 87;
+            /* Magma */
+            --c-purple: 165, 94, 234;
+            /* Amethyst */
+            --c-emerald: 46, 213, 115;
+            /* Emerald */
+            --c-silver: 192, 192, 192;
+            /* Mithril */
+            --c-turquoise: 64, 224, 208;
+            /* Cyan */
+            --c-amber: 255, 191, 0;
+            /* Amber */
+            --c-ruby: 224, 17, 95;
+            /* Ruby */
+            --c-peridot: 154, 205, 50;
+            /* Peridot */
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+            outline: none;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* 禁止选中文字，提升长按体验 */
+        .filter-item {
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* 动画 */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.4s ease forwards;
+        }
+
+        @keyframes star-bounce {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.4);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .star-anim {
+            animation: star-bounce 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes pulse-blue {
+            0% {
+                box-shadow: 0 0 0 0 rgba(0, 147, 255, 0.4);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(0, 147, 255, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(0, 147, 255, 0);
+            }
+        }
+
+        /* 环境光 */
+        .ambient-top {
+            position: fixed;
+            top: -100px;
+            left: -50px;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(var(--c-gold), 0.06), transparent 70%);
+            filter: blur(60px);
+            z-index: -1;
+        }
+
+        .ambient-bottom {
+            position: fixed;
+            bottom: -50px;
+            right: -50px;
+            width: 350px;
+            height: 350px;
+            background: radial-gradient(circle, rgba(var(--c-blue), 0.08), transparent 70%);
+            filter: blur(70px);
+            z-index: -1;
+        }
+
+        /* Header */
+        header {
+            padding: calc(25px + var(--safe-area-top)) 24px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(8, 9, 11, 0.85);
+            backdrop-filter: blur(12px);
+            z-index: 100;
+            position: sticky;
+            top: 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        .brand {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .brand-subtitle {
+            font-size: 9px;
+            letter-spacing: 4px;
+            color: rgb(var(--c-gold));
+            text-transform: uppercase;
+            margin-bottom: 2px;
+            font-weight: 600;
+            opacity: 0.8;
+        }
+
+        .brand-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-main);
+            letter-spacing: 1px;
+            line-height: 1.1;
+            background: linear-gradient(to right, #fff, #aaa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .icon-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-main);
+        }
+
+        /* 筛选栏 */
+        .filter-scroll {
+            padding: 25px 24px;
+            display: flex;
+            gap: 24px;
+            overflow-x: auto;
+            scrollbar-width: none;
+            align-items: center;
+        }
+
+        .filter-scroll::-webkit-scrollbar {
+            display: none;
+        }
+
+        .filter-item {
+            font-size: 14px;
+            color: var(--text-sub);
+            white-space: nowrap;
+            position: relative;
+            padding-bottom: 6px;
+            font-family: 'Playfair Display', serif;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+        }
+
+        .filter-item::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--text-sub);
+            opacity: 0.3;
+            transition: all 0.3s;
+        }
+
+        /* 动态生成颜色样式 */
+        .filter-item.active-gold {
+            color: rgb(var(--c-gold));
+            font-weight: 600;
+            font-style: italic;
+        }
+
+        .filter-item.active-gold::before {
+            background: rgb(var(--c-gold));
+            opacity: 1;
+            box-shadow: 0 0 8px rgb(var(--c-gold));
+        }
+
+        .filter-item.active-gold::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: rgb(var(--c-gold));
+        }
+
+        .tag-gold {
+            color: rgb(var(--c-gold));
+            background: rgba(var(--c-gold), 0.08);
+            border: 1px solid rgba(var(--c-gold), 0.2);
+        }
+
+        .card.accent-gold::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 3px;
+            height: 100%;
+            background: rgb(var(--c-gold));
+            box-shadow: 0 0 10px rgb(var(--c-gold));
+        }
+
+        .filter-item.active-blue {
+            color: rgb(var(--c-blue));
+            font-weight: 600;
+            font-style: italic;
+        }
+
+        .filter-item.active-blue::before {
+            background: rgb(var(--c-blue));
+            opacity: 1;
+            box-shadow: 0 0 8px rgb(var(--c-blue));
+        }
+
+        .filter-item.active-blue::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: rgb(var(--c-blue));
+        }
+
+        .tag-blue {
+            color: rgb(var(--c-blue));
+            background: rgba(var(--c-blue), 0.08);
+            border: 1px solid rgba(var(--c-blue), 0.2);
+        }
+
+        .card.accent-blue::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 3px;
+            height: 0%;
+            transition: height 0.3s;
+            background: rgb(var(--c-blue));
+            box-shadow: 0 0 10px rgb(var(--c-blue));
+        }
+
+        .filter-item.active-crimson {
+            color: rgb(var(--c-crimson));
+            font-weight: 600;
+            font-style: italic;
+        }
+
+        .filter-item.active-crimson::before {
+            background: rgb(var(--c-crimson));
+            opacity: 1;
+            box-shadow: 0 0 8px rgb(var(--c-crimson));
+        }
+
+        .filter-item.active-crimson::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: rgb(var(--c-crimson));
+        }
+
+        .tag-crimson {
+            color: rgb(var(--c-crimson));
+            background: rgba(var(--c-crimson), 0.08);
+            border: 1px solid rgba(var(--c-crimson), 0.2);
+        }
+
+        .card.accent-crimson::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 3px;
+            height: 0%;
+            transition: height 0.3s;
+            background: rgb(var(--c-crimson));
+            box-shadow: 0 0 10px rgb(var(--c-crimson));
+        }
+
+        .filter-item.active-purple {
+            color: rgb(var(--c-purple));
+            font-weight: 600;
+            font-style: italic;
+        }
+
+        .filter-item.active-purple::before {
+            background: rgb(var(--c-purple));
+            opacity: 1;
+            box-shadow: 0 0 8px rgb(var(--c-purple));
+        }
+
+        .filter-item.active-purple::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: rgb(var(--c-purple));
+        }
+
+        .tag-purple {
+            color: rgb(var(--c-purple));
+            background: rgba(var(--c-purple), 0.08);
+            border: 1px solid rgba(var(--c-purple), 0.2);
+        }
+
+        .card.accent-purple::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 3px;
+            height: 0%;
+            transition: height 0.3s;
+            background: rgb(var(--c-purple));
+            box-shadow: 0 0 10px rgb(var(--c-purple));
+        }
+
+        .filter-item.active-emerald {
+            color: rgb(var(--c-emerald));
+            font-weight: 600;
+            font-style: italic;
+        }
+
+        .filter-item.active-emerald::before {
+            background: rgb(var(--c-emerald));
+            opacity: 1;
+            box-shadow: 0 0 8px rgb(var(--c-emerald));
+        }
+
+        .filter-item.active-emerald::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: rgb(var(--c-emerald));
+        }
+
+        .tag-emerald {
+            color: rgb(var(--c-emerald));
+            background: rgba(var(--c-emerald), 0.08);
+            border: 1px solid rgba(var(--c-emerald), 0.2);
+        }
+
+        .card.accent-emerald::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 3px;
+            height: 0%;
+            transition: height 0.3s;
+            background: rgb(var(--c-emerald));
+            box-shadow: 0 0 10px rgb(var(--c-emerald));
+        }
+
+        /* 其他5种高级配色 */
+        .filter-item.active-silver {
+            color: rgb(var(--c-silver));
+            font-weight: 600;
+            font-style: italic;
+        }
+
+        .filter-item.active-silver::before {
+            background: rgb(var(--c-silver));
+            opacity: 1;
+            box-shadow: 0 0 8px rgb(var(--c-silver));
+        }
+
+        .filter-item.active-silver::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: rgb(var(--c-silver));
+        }
+
+        .tag-silver {
+            color: rgb(var(--c-silver));
+            background: rgba(var(--c-silver), 0.08);
+            border: 1px solid rgba(var(--c-silver), 0.2);
+        }
+
+        .card.accent-silver::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 3px;
+            height: 0%;
+            transition: height 0.3s;
+            background: rgb(var(--c-silver));
+            box-shadow: 0 0 10px rgb(var(--c-silver));
+        }
+
+        .filter-item.active-turquoise {
+            color: rgb(var(--c-turquoise));
+            font-weight: 600;
+            font-style: italic;
+        }
+
+        .filter-item.active-turquoise::before {
+            background: rgb(var(--c-turquoise));
+            opacity: 1;
+            box-shadow: 0 0 8px rgb(var(--c-turquoise));
+        }
+
+        .filter-item.active-turquoise::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: rgb(var(--c-turquoise));
+        }
+
+        .tag-turquoise {
+            color: rgb(var(--c-turquoise));
+            background: rgba(var(--c-turquoise), 0.08);
+            border: 1px solid rgba(var(--c-turquoise), 0.2);
+        }
+
+        .card.accent-turquoise::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 3px;
+            height: 0%;
+            transition: height 0.3s;
+            background: rgb(var(--c-turquoise));
+            box-shadow: 0 0 10px rgb(var(--c-turquoise));
+        }
+
+        .filter-item.active-amber {
+            color: rgb(var(--c-amber));
+            font-weight: 600;
+            font-style: italic;
+        }
+
+        .filter-item.active-amber::before {
+            background: rgb(var(--c-amber));
+            opacity: 1;
+            box-shadow: 0 0 8px rgb(var(--c-amber));
+        }
+
+        .filter-item.active-amber::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: rgb(var(--c-amber));
+        }
+
+        .tag-amber {
+            color: rgb(var(--c-amber));
+            background: rgba(var(--c-amber), 0.08);
+            border: 1px solid rgba(var(--c-amber), 0.2);
+        }
+
+        .card.accent-amber::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 3px;
+            height: 0%;
+            transition: height 0.3s;
+            background: rgb(var(--c-amber));
+            box-shadow: 0 0 10px rgb(var(--c-amber));
+        }
+
+        .filter-item.active-ruby {
+            color: rgb(var(--c-ruby));
+            font-weight: 600;
+            font-style: italic;
+        }
+
+        .filter-item.active-ruby::before {
+            background: rgb(var(--c-ruby));
+            opacity: 1;
+            box-shadow: 0 0 8px rgb(var(--c-ruby));
+        }
+
+        .filter-item.active-ruby::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: rgb(var(--c-ruby));
+        }
+
+        .tag-ruby {
+            color: rgb(var(--c-ruby));
+            background: rgba(var(--c-ruby), 0.08);
+            border: 1px solid rgba(var(--c-ruby), 0.2);
+        }
+
+        .card.accent-ruby::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 3px;
+            height: 0%;
+            transition: height 0.3s;
+            background: rgb(var(--c-ruby));
+            box-shadow: 0 0 10px rgb(var(--c-ruby));
+        }
+
+        .filter-item.active-peridot {
+            color: rgb(var(--c-peridot));
+            font-weight: 600;
+            font-style: italic;
+        }
+
+        .filter-item.active-peridot::before {
+            background: rgb(var(--c-peridot));
+            opacity: 1;
+            box-shadow: 0 0 8px rgb(var(--c-peridot));
+        }
+
+        .filter-item.active-peridot::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: rgb(var(--c-peridot));
+        }
+
+        .tag-peridot {
+            color: rgb(var(--c-peridot));
+            background: rgba(var(--c-peridot), 0.08);
+            border: 1px solid rgba(var(--c-peridot), 0.2);
+        }
+
+        .card.accent-peridot::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 3px;
+            height: 0%;
+            transition: height 0.3s;
+            background: rgb(var(--c-peridot));
+            box-shadow: 0 0 10px rgb(var(--c-peridot));
+        }
+
+
+        .add-tag-btn {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 1px dashed var(--text-sub);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-sub);
+            flex-shrink: 0;
+            transition: all 0.3s;
+        }
+
+        .add-tag-btn:active {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border-color: #fff;
+        }
+
+        /* 卡片 */
+        .list-container {
+            padding: 0 24px 120px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            min-height: 50vh;
+        }
+
+        .card {
+            background: var(--card-bg-gradient);
+            border-radius: 4px;
+            padding: 28px 24px;
+            position: relative;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            overflow: hidden;
+        }
+
+        .card:active {
+            transform: scale(0.98);
+        }
+
+        .card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+        }
+
+        .card-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 18px;
+            font-weight: 600;
+            color: #fff;
+            letter-spacing: 0.5px;
+        }
+
+        .card-icon {
+            color: #333;
+            cursor: pointer;
+            transition: color 0.2s;
+            font-size: 16px;
+            padding: 5px;
+        }
+
+        .card-icon.starred {
+            color: rgb(var(--c-gold));
+            text-shadow: 0 0 10px rgba(var(--c-gold), 0.4);
+        }
+
+        .card-body {
+            font-size: 13px;
+            line-height: 1.8;
+            color: #8A96A3;
+            font-weight: 300;
+            margin-bottom: 24px;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .card-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.04);
+            padding-top: 16px;
+        }
+
+        .card:hover::before {
+            height: 100%;
+        }
+
+        .tag-pill {
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 5px 12px;
+            border-radius: 2px;
+            backdrop-filter: blur(4px);
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .time-text {
+            font-size: 11px;
+            color: #555;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .empty-state {
+            display: none;
+            text-align: center;
+            color: var(--text-sub);
+            padding-top: 40px;
+            font-size: 14px;
+        }
+
+        .fab-btn {
+            position: fixed;
+            bottom: calc(35px + var(--safe-area-bottom));
+            right: 24px;
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: #08090B;
+            border: 1px solid rgba(var(--c-blue), 0.5);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.8), 0 0 15px rgba(var(--c-blue), 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgb(var(--c-blue));
+            font-size: 22px;
+            z-index: 99;
+            animation: pulse-blue 3s infinite;
+            transition: transform 0.2s;
+        }
+
+        .fab-btn:active {
+            transform: scale(0.92);
+            box-shadow: 0 0 25px rgba(var(--c-blue), 0.6);
+            border-color: rgba(var(--c-blue), 1);
+        }
+
+        .menu-trigger {
+            position: fixed;
+            left: 24px;
+            bottom: calc(50px + var(--safe-area-bottom));
+            color: var(--text-sub);
+            font-size: 12px;
+            letter-spacing: 2px;
+            z-index: 99;
+        }
+
+        /* 模态框 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            z-index: 200;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal-content {
+            background: #101216;
+            width: 85%;
+            max-width: 340px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            padding: 24px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+            transform: translateY(20px);
+            transition: transform 0.3s;
+        }
+
+        .modal-overlay.show .modal-content {
+            transform: translateY(0);
+        }
+
+        .modal-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 20px;
+            color: #fff;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .modal-input {
+            width: 100%;
+            background: #08090B;
+            border: 1px solid var(--border-color);
+            padding: 12px;
+            color: #fff;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .modal-input:focus {
+            border-color: rgb(var(--c-blue));
+        }
+
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            margin-bottom: 24px;
+        }
+
+        .color-option {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: transform 0.2s;
+        }
+
+        .color-option.selected {
+            transform: scale(1.2);
+            border-color: #fff;
+        }
+
+        .bg-gold {
+            background: rgb(var(--c-gold));
+        }
+
+        .bg-blue {
+            background: rgb(var(--c-blue));
+        }
+
+        .bg-crimson {
+            background: rgb(var(--c-crimson));
+        }
+
+        .bg-purple {
+            background: rgb(var(--c-purple));
+        }
+
+        .bg-emerald {
+            background: rgb(var(--c-emerald));
+        }
+
+        .bg-silver {
+            background: rgb(var(--c-silver));
+        }
+
+        .bg-turquoise {
+            background: rgb(var(--c-turquoise));
+        }
+
+        .bg-amber {
+            background: rgb(var(--c-amber));
+        }
+
+        .bg-ruby {
+            background: rgb(var(--c-ruby));
+        }
+
+        .bg-peridot {
+            background: rgb(var(--c-peridot));
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-right-btns {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn-text {
+            background: none;
+            border: none;
+            color: var(--text-sub);
+            font-size: 14px;
+            cursor: pointer;
+            padding: 8px 16px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, rgb(var(--c-blue)), #0056B3);
+            border: none;
+            color: #fff;
+            padding: 8px 20px;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .btn-delete {
+            color: rgb(var(--c-crimson));
+            background: none;
+            border: none;
+            font-size: 14px;
+            cursor: pointer;
+            padding: 8px;
+            display: none;
+        }
+
+        .btn-delete.visible {
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="ambient-top"></div>
+    <div class="ambient-bottom"></div>
+
+    <header>
+        <div class="brand">
+            <span class="brand-subtitle">PRIVATE WORKSPACE</span>
+            <span class="brand-title">M System</span>
+        </div>
+        <div class="icon-btn">
+            <i class="fas fa-search"></i>
+        </div>
+    </header>
+
+    <div class="filter-scroll" id="filterScroll">
+        <div class="add-tag-btn" id="addTagBtn">
+            <i class="fas fa-plus"></i>
+        </div>
+    </div>
+
+    <div class="list-container" id="cardList">
+        <div class="card accent-gold" data-category="core">
+            <div class="card-top">
+                <div class="card-title">Long Press to Edit</div>
+                <i class="fas fa-star card-icon starred"></i>
+            </div>
+            <div class="card-body">
+                Feature Update: You can now <strong>Long Press</strong> any custom tag in the filter bar to modify its
+                name or color.
+            </div>
+            <div class="card-meta">
+                <span class="tag-pill tag-gold"><i class="fas fa-crown" style="font-size:8px;"></i> Core</span>
+                <span class="time-text">NOW</span>
+            </div>
+        </div>
+
+        <div class="card accent-blue" data-category="ranked">
+            <div class="card-top">
+                <div class="card-title">Action Button</div>
+                <i class="far fa-star card-icon"></i>
+            </div>
+            <div class="card-body">
+                Pure Hextech Blue energy. No impurities.
+            </div>
+            <div class="card-meta">
+                <span class="tag-pill tag-blue"><i class="fas fa-code" style="font-size:8px;"></i> Ranked</span>
+                <span class="time-text">Yesterday</span>
+            </div>
+        </div>
+
+        <div class="card accent-crimson" data-category="forge">
+            <div class="card-top">
+                <div class="card-title">Bug Fix</div>
+                <i class="far fa-star card-icon"></i>
+            </div>
+            <div class="card-body">
+                Urgent rendering issues.
+            </div>
+            <div class="card-meta">
+                <span class="tag-pill tag-crimson"><i class="fas fa-fire" style="font-size:8px;"></i> Forge</span>
+                <span class="time-text">10:42 AM</span>
+            </div>
+        </div>
+
+        <div class="empty-state" id="emptyState">
+            <i class="fas fa-wind" style="font-size: 24px; margin-bottom: 10px; opacity: 0.5;"></i>
+            <p>No items found.</p>
+        </div>
+    </div>
+
+    <div class="menu-trigger">MENU</div>
+    <button class="fab-btn"><i class="fas fa-plus"></i></button>
+
+    <!-- 模态框 -->
+    <div class="modal-overlay" id="tagModal">
+        <div class="modal-content">
+            <div class="modal-title" id="modalTitle">New Label</div>
+            <div class="input-group">
+                <input type="text" class="modal-input" id="tagNameInput" placeholder="Enter tag name...">
+            </div>
+            <div class="color-grid" id="colorGrid">
+                <div class="color-option bg-gold selected" data-color="gold"></div>
+                <div class="color-option bg-blue" data-color="blue"></div>
+                <div class="color-option bg-crimson" data-color="crimson"></div>
+                <div class="color-option bg-purple" data-color="purple"></div>
+                <div class="color-option bg-emerald" data-color="emerald"></div>
+                <div class="color-option bg-silver" data-color="silver"></div>
+                <div class="color-option bg-turquoise" data-color="turquoise"></div>
+                <div class="color-option bg-amber" data-color="amber"></div>
+                <div class="color-option bg-ruby" data-color="ruby"></div>
+                <div class="color-option bg-peridot" data-color="peridot"></div>
+            </div>
+            <div class="modal-actions">
+                <!-- 删除按钮 (默认隐藏) -->
+                <button class="btn-delete" id="deleteTagBtn"><i class="fas fa-trash"></i> Delete</button>
+
+                <div class="modal-right-btns">
+                    <button class="btn-text" id="cancelTagBtn">Cancel</button>
+                    <button class="btn-primary" id="saveTagBtn">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 数据管理 ---
+        let tags = [
+            { name: 'Overview', color: 'gold', id: 'all' }, // ID 'all' 是受保护的
+            { name: 'Ranked', color: 'blue', id: 'ranked' },
+            { name: 'Forge', color: 'crimson', id: 'forge' },
+            { name: 'Void', color: 'purple', id: 'void' },
+            { name: 'Collection', color: 'emerald', id: 'collection' }
+        ];
+
+        const filterScroll = document.getElementById('filterScroll');
+        const addTagBtn = document.getElementById('addTagBtn');
+        const cards = document.querySelectorAll('.card');
+        const emptyState = document.getElementById('emptyState');
+
+        // 模态框元素
+        const tagModal = document.getElementById('tagModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const tagNameInput = document.getElementById('tagNameInput');
+        const colorOptions = document.querySelectorAll('.color-option');
+        const cancelTagBtn = document.getElementById('cancelTagBtn');
+        const saveTagBtn = document.getElementById('saveTagBtn');
+        const deleteTagBtn = document.getElementById('deleteTagBtn');
+
+        let selectedColor = 'gold';
+        let editingIndex = -1; // -1 表示新增模式，>=0 表示编辑模式的索引
+
+        // --- 渲染标签 ---
+        function renderTags() {
+            // 清除现有的 filter-item
+            const existingItems = filterScroll.querySelectorAll('.filter-item');
+            existingItems.forEach(el => el.remove());
+
+            tags.forEach((tag, index) => {
+                const el = document.createElement('div');
+                el.className = `filter-item ${index === 0 ? 'active-' + tag.color : ''}`;
+                el.setAttribute('data-filter', tag.id);
+                el.setAttribute('data-color', tag.color);
+                el.innerText = tag.name;
+
+                filterScroll.insertBefore(el, addTagBtn);
+
+                // 点击筛选
+                el.addEventListener('click', () => handleFilterClick(el));
+
+                // 长按修改 (Long Press Logic)
+                // 忽略 'all' 标签，不允许修改系统默认
+                if (tag.id !== 'all') {
+                    let pressTimer;
+
+                    // Mobile Touch
+                    el.addEventListener('touchstart', (e) => {
+                        pressTimer = setTimeout(() => {
+                            // 触发震动反馈
+                            if (navigator.vibrate) navigator.vibrate(50);
+                            openModal(index); // 进入编辑模式
+                        }, 600); // 600ms 长按触发
+                    });
+
+                    el.addEventListener('touchend', () => clearTimeout(pressTimer));
+                    el.addEventListener('touchmove', () => clearTimeout(pressTimer));
+
+                    // Desktop Right Click
+                    el.addEventListener('contextmenu', (e) => {
+                        e.preventDefault();
+                        openModal(index);
+                    });
+                }
+            });
+        }
+
+        // --- 筛选逻辑 ---
+        function handleFilterClick(clickedEl) {
+            const allItems = filterScroll.querySelectorAll('.filter-item');
+            allItems.forEach(item => item.className = 'filter-item');
+
+            const color = clickedEl.getAttribute('data-color');
+            clickedEl.classList.add(`active-${color}`);
+
+            const category = clickedEl.getAttribute('data-filter');
+            let visibleCount = 0;
+
+            cards.forEach(card => {
+                card.classList.remove('fade-in');
+                void card.offsetWidth;
+
+                const cardCat = card.getAttribute('data-category');
+                if (category === 'all' || cardCat === category) {
+                    card.style.display = 'block';
+                    card.classList.add('fade-in');
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+            emptyState.style.display = visibleCount === 0 ? 'block' : 'none';
+        }
+
+        // --- 模态框逻辑 ---
+
+        // 打开模态框 (mode: 'add' 或 index)
+        function openModal(index = -1) {
+            tagModal.classList.add('show');
+            editingIndex = index;
+
+            if (editingIndex === -1) {
+                // Add Mode
+                modalTitle.innerText = "New Label";
+                saveTagBtn.innerText = "Create";
+                tagNameInput.value = '';
+                selectedColor = 'gold';
+                deleteTagBtn.classList.remove('visible'); // 隐藏删除
+                updateColorSelection('gold');
+            } else {
+                // Edit Mode
+                const tag = tags[editingIndex];
+                modalTitle.innerText = "Edit Label";
+                saveTagBtn.innerText = "Update";
+                tagNameInput.value = tag.name;
+                selectedColor = tag.color;
+                deleteTagBtn.classList.add('visible'); // 显示删除
+                updateColorSelection(tag.color);
+            }
+
+            if (window.innerWidth > 500) tagNameInput.focus();
+        }
+
+        function updateColorSelection(color) {
+            colorOptions.forEach(opt => opt.classList.remove('selected'));
+            const target = document.querySelector(`.color-option[data-color="${color}"]`);
+            if (target) target.classList.add('selected');
+        }
+
+        // 关闭
+        function closeModal() { tagModal.classList.remove('show'); }
+        cancelTagBtn.addEventListener('click', closeModal);
+        tagModal.addEventListener('click', (e) => { if (e.target === tagModal) closeModal(); });
+        addTagBtn.addEventListener('click', () => openModal(-1));
+
+        // 颜色选择
+        colorOptions.forEach(opt => {
+            opt.addEventListener('click', () => {
+                selectedColor = opt.getAttribute('data-color');
+                updateColorSelection(selectedColor);
+            });
+        });
+
+        // 保存/更新逻辑
+        saveTagBtn.addEventListener('click', () => {
+            const name = tagNameInput.value.trim();
+            if (!name) return;
+
+            const newId = name.toLowerCase().replace(/\s+/g, '-');
+
+            if (editingIndex === -1) {
+                // 新增
+                tags.push({ name: name, color: selectedColor, id: newId });
+            } else {
+                // 修改
+                tags[editingIndex].name = name;
+                tags[editingIndex].color = selectedColor;
+                // id 理论上也可以改，但在真实后端中通常id不变。这里为了前端演示简单，不改id或同步改id均可
+                tags[editingIndex].id = newId;
+            }
+
+            renderTags();
+            closeModal();
+
+            if (editingIndex === -1) {
+                setTimeout(() => filterScroll.scrollLeft = filterScroll.scrollWidth, 100);
+            }
+        });
+
+        // 删除逻辑
+        deleteTagBtn.addEventListener('click', () => {
+            if (editingIndex > -1) {
+                if (confirm('Delete this label?')) {
+                    tags.splice(editingIndex, 1);
+                    renderTags();
+                    closeModal();
+                    // 重置为 Overview 选中
+                    const firstItem = filterScroll.querySelector('.filter-item');
+                    if (firstItem) firstItem.click();
+                }
+            }
+        });
+
+        // 收藏动画
+        const stars = document.querySelectorAll('.card-icon');
+        stars.forEach(star => {
+            star.addEventListener('click', (e) => {
+                e.stopPropagation();
+                star.classList.remove('star-anim');
+                void star.offsetWidth;
+                star.classList.add('star-anim');
+                if (star.classList.contains('starred')) {
+                    star.classList.remove('starred', 'fas');
+                    star.classList.add('far');
+                } else {
+                    star.classList.add('starred', 'fas');
+                    star.classList.remove('far');
+                }
+            });
+        });
+
+        // 初始化
+        renderTags();
+
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>M System - Login</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;900&family=Inter:wght@300;400;500;600&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg-main: #08090B;
+            --text-main: #E6E6E6;
+            --text-sub: #788296;
+            --border-color: rgba(255, 255, 255, 0.06);
+            --c-gold: 200, 170, 110;
+            --c-blue: 0, 147, 255;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .ambient-top {
+            position: fixed;
+            top: -100px;
+            left: -50px;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(var(--c-gold), 0.06), transparent 70%);
+            filter: blur(60px);
+            z-index: -1;
+        }
+
+        .ambient-bottom {
+            position: fixed;
+            bottom: -50px;
+            right: -50px;
+            width: 350px;
+            height: 350px;
+            background: radial-gradient(circle, rgba(var(--c-blue), 0.08), transparent 70%);
+            filter: blur(70px);
+            z-index: -1;
+        }
+
+        .login-container {
+            width: 90%;
+            max-width: 380px;
+            padding: 40px 32px;
+            background: linear-gradient(145deg, #15181E, #0C0E11);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+        }
+
+        .brand {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .brand-subtitle {
+            font-size: 9px;
+            letter-spacing: 4px;
+            color: rgb(var(--c-gold));
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            font-weight: 600;
+            opacity: 0.8;
+        }
+
+        .brand-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 42px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            background: linear-gradient(to right, #fff, #aaa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .input-group {
+            margin-bottom: 24px;
+        }
+
+        .input-label {
+            display: block;
+            font-size: 12px;
+            color: var(--text-sub);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 14px 16px;
+            background: #08090B;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            color: var(--text-main);
+            font-size: 15px;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.3s;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: rgb(var(--c-blue));
+            box-shadow: 0 0 0 3px rgba(var(--c-blue), 0.1);
+        }
+
+        .error-message {
+            color: #ff4757;
+            font-size: 12px;
+            margin-top: 8px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, rgb(var(--c-blue)), #0056B3);
+            border: none;
+            border-radius: 4px;
+            color: #fff;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(var(--c-blue), 0.3);
+        }
+
+        .login-btn:active {
+            transform: translateY(0);
+        }
+
+        .login-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(-10px);
+            }
+
+            75% {
+                transform: translateX(10px);
+            }
+        }
+
+        .shake {
+            animation: shake 0.4s;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="ambient-top"></div>
+    <div class="ambient-bottom"></div>
+
+    <div class="login-container">
+        <div class="brand">
+            <div class="brand-subtitle">PRIVATE WORKSPACE</div>
+            <div class="brand-title">M System</div>
+        </div>
+
+        <form id="loginForm">
+            <div class="input-group">
+                <label class="input-label" for="password">Access Code</label>
+                <input type="password" id="password" class="input-field" placeholder="Enter your password"
+                    autocomplete="current-password">
+                <div class="error-message" id="errorMessage">
+                    <i class="fas fa-exclamation-circle"></i> Invalid password
+                </div>
+            </div>
+
+            <button type="submit" class="login-btn" id="loginBtn">
+                <i class="fas fa-unlock"></i> Enter System
+            </button>
+        </form>
+    </div>
+
+    <script>
+        const CORRECT_PASSWORD = 'moriaty10000';
+        const loginForm = document.getElementById('loginForm');
+        const passwordInput = document.getElementById('password');
+        const errorMessage = document.getElementById('errorMessage');
+        const loginBtn = document.getElementById('loginBtn');
+        const loginContainer = document.querySelector('.login-container');
+
+        // 检查是否已登录
+        if (localStorage.getItem('isAuthenticated') === 'true') {
+            window.location.href = '/';
+        }
+
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const password = passwordInput.value;
+
+            if (password === CORRECT_PASSWORD) {
+                // 登录成功
+                localStorage.setItem('isAuthenticated', 'true');
+                loginBtn.innerHTML = '<i class="fas fa-check"></i> Success';
+                loginBtn.disabled = true;
+
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 500);
+            } else {
+                // 登录失败
+                errorMessage.classList.add('show');
+                loginContainer.classList.add('shake');
+                passwordInput.value = '';
+                passwordInput.focus();
+
+                if (navigator.vibrate) {
+                    navigator.vibrate([100, 50, 100]);
+                }
+
+                setTimeout(() => {
+                    loginContainer.classList.remove('shake');
+                    errorMessage.classList.remove('show');
+                }, 2000);
+            }
+        });
+
+        // 自动聚焦
+        passwordInput.focus();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,1580 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>M System</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;900&family=Inter:wght@300;400;500;600&display=swap"
+        rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-main: #08090B;
+            --card-bg-gradient: linear-gradient(145deg, #15181E, #0C0E11);
+            --text-main: #E6E6E6;
+            --text-sub: #788296;
+            --border-color: rgba(255, 255, 255, 0.06);
+            --safe-area-top: env(safe-area-inset-top);
+            --safe-area-bottom: env(safe-area-inset-bottom);
+
+            /* === 10种高级宝石配色 (RGB格式) === */
+            --c-gold: 200, 170, 110;
+            --c-blue: 0, 147, 255;
+            --c-crimson: 255, 71, 87;
+            --c-purple: 165, 94, 234;
+            --c-emerald: 46, 213, 115;
+            --c-silver: 192, 192, 192;
+            --c-turquoise: 64, 224, 208;
+            --c-amber: 255, 191, 0;
+            --c-ruby: 224, 17, 95;
+            --c-peridot: 154, 205, 50;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+            outline: none;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .filter-item {
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.4s ease forwards;
+        }
+
+        @keyframes star-bounce {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.4);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .star-anim {
+            animation: star-bounce 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes pulse-blue {
+            0% {
+                box-shadow: 0 0 0 0 rgba(0, 147, 255, 0.4);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(0, 147, 255, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(0, 147, 255, 0);
+            }
+        }
+
+        .ambient-top {
+            position: fixed;
+            top: -100px;
+            left: -50px;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(var(--c-gold), 0.06), transparent 70%);
+            filter: blur(60px);
+            z-index: -1;
+        }
+
+        .ambient-bottom {
+            position: fixed;
+            bottom: -50px;
+            right: -50px;
+            width: 350px;
+            height: 350px;
+            background: radial-gradient(circle, rgba(var(--c-blue), 0.08), transparent 70%);
+            filter: blur(70px);
+            z-index: -1;
+        }
+
+        header {
+            padding: calc(25px + var(--safe-area-top)) 24px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(8, 9, 11, 0.85);
+            backdrop-filter: blur(12px);
+            z-index: 100;
+            position: sticky;
+            top: 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        .brand {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .brand-subtitle {
+            font-size: 9px;
+            letter-spacing: 4px;
+            color: rgb(var(--c-gold));
+            text-transform: uppercase;
+            margin-bottom: 2px;
+            font-weight: 600;
+            opacity: 0.8;
+        }
+
+        .brand-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-main);
+            letter-spacing: 1px;
+            line-height: 1.1;
+            background: linear-gradient(to right, #fff, #aaa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .icon-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-main);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .icon-btn:active {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .filter-scroll {
+            padding: 25px 24px;
+            display: flex;
+            gap: 24px;
+            overflow-x: auto;
+            scrollbar-width: none;
+            align-items: center;
+        }
+
+        .filter-scroll::-webkit-scrollbar {
+            display: none;
+        }
+
+        .filter-item {
+            font-size: 14px;
+            color: var(--text-sub);
+            white-space: nowrap;
+            position: relative;
+            padding-bottom: 6px;
+            font-family: 'Playfair Display', serif;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+        }
+
+        .filter-item::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--text-sub);
+            opacity: 0.3;
+            transition: all 0.3s;
+        }
+
+        /* 动态生成颜色样式 */
+        .filter-item.active-gold {
+            color: rgb(var(--c-gold));
+            font-weight: 600;
+            font-style: italic;
+        }
+
+        .filter-item.active-gold::before {
+            background: rgb(var(--c-gold));
+            opacity: 1;
+            box-shadow: 0 0 8px rgb(var(--c-gold));
+        }
+
+        .filter-item.active-gold::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: rgb(var(--c-gold));
+        }
+
+        .tag-gold {
+            color: rgb(var(--c-gold));
+            background: rgba(var(--c-gold), 0.08);
+            border: 1px solid rgba(var(--c-gold), 0.2);
+        }
+
+        .card.accent-gold::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 3px;
+            height: 100%;
+            background: rgb(var(--c-gold));
+            box-shadow: 0 0 10px rgb(var(--c-gold));
+        }
+
+        .filter-item.active-blue {
+            color: rgb(var(--c-blue));
+            font-weight: 600;
+            font-style: italic;
+        }
+
+        .filter-item.active-blue::before {
+            background: rgb(var(--c-blue));
+            opacity: 1;
+            box-shadow: 0 0 8px rgb(var(--c-blue));
+        }
+
+        .filter-item.active-blue::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: rgb(var(--c-blue));
+        }
+
+        .tag-blue {
+            color: rgb(var(--c-blue));
+            background: rgba(var(--c-blue), 0.08);
+            border: 1px solid rgba(var(--c-blue), 0.2);
+        }
+
+        .card.accent-blue::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 3px;
+            height: 100%;
+            background: rgb(var(--c-blue));
+            box-shadow: 0 0 10px rgb(var(--c-blue));
+        }
+
+        .filter-item.active-crimson {
+            color: rgb(var(--c-crimson));
+            font-weight: 600;
+            font-style: italic;
+        }
+
+        .filter-item.active-crimson::before {
+            background: rgb(var(--c-crimson));
+            opacity: 1;
+            box-shadow: 0 0 8px rgb(var(--c-crimson));
+        }
+
+        .filter-item.active-crimson::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: rgb(var(--c-crimson));
+        }
+
+        .tag-crimson {
+            color: rgb(var(--c-crimson));
+            background: rgba(var(--c-crimson), 0.08);
+            border: 1px solid rgba(var(--c-crimson), 0.2);
+        }
+
+        .card.accent-crimson::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 3px;
+            height: 100%;
+            background: rgb(var(--c-crimson));
+            box-shadow: 0 0 10px rgb(var(--c-crimson));
+        }
+
+        .filter-item.active-purple {
+            color: rgb(var(--c-purple));
+            font-weight: 600;
+            font-style: italic;
+        }
+
+        .filter-item.active-purple::before {
+            background: rgb(var(--c-purple));
+            opacity: 1;
+            box-shadow: 0 0 8px rgb(var(--c-purple));
+        }
+
+        .filter-item.active-purple::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: rgb(var(--c-purple));
+        }
+
+        .tag-purple {
+            color: rgb(var(--c-purple));
+            background: rgba(var(--c-purple), 0.08);
+            border: 1px solid rgba(var(--c-purple), 0.2);
+        }
+
+        .card.accent-purple::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 3px;
+            height: 100%;
+            background: rgb(var(--c-purple));
+            box-shadow: 0 0 10px rgb(var(--c-purple));
+        }
+
+        .filter-item.active-emerald {
+            color: rgb(var(--c-emerald));
+            font-weight: 600;
+            font-style: italic;
+        }
+
+        .filter-item.active-emerald::before {
+            background: rgb(var(--c-emerald));
+            opacity: 1;
+            box-shadow: 0 0 8px rgb(var(--c-emerald));
+        }
+
+        .filter-item.active-emerald::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: rgb(var(--c-emerald));
+        }
+
+        .tag-emerald {
+            color: rgb(var(--c-emerald));
+            background: rgba(var(--c-emerald), 0.08);
+            border: 1px solid rgba(var(--c-emerald), 0.2);
+        }
+
+        .card.accent-emerald::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 3px;
+            height: 100%;
+            background: rgb(var(--c-emerald));
+            box-shadow: 0 0 10px rgb(var(--c-emerald));
+        }
+
+        .filter-item.active-silver {
+            color: rgb(var(--c-silver));
+            font-weight: 600;
+            font-style: italic;
+        }
+
+        .filter-item.active-silver::before {
+            background: rgb(var(--c-silver));
+            opacity: 1;
+            box-shadow: 0 0 8px rgb(var(--c-silver));
+        }
+
+        .filter-item.active-silver::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: rgb(var(--c-silver));
+        }
+
+        .tag-silver {
+            color: rgb(var(--c-silver));
+            background: rgba(var(--c-silver), 0.08);
+            border: 1px solid rgba(var(--c-silver), 0.2);
+        }
+
+        .card.accent-silver::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 3px;
+            height: 100%;
+            background: rgb(var(--c-silver));
+            box-shadow: 0 0 10px rgb(var(--c-silver));
+        }
+
+        .filter-item.active-turquoise {
+            color: rgb(var(--c-turquoise));
+            font-weight: 600;
+            font-style: italic;
+        }
+
+        .filter-item.active-turquoise::before {
+            background: rgb(var(--c-turquoise));
+            opacity: 1;
+            box-shadow: 0 0 8px rgb(var(--c-turquoise));
+        }
+
+        .filter-item.active-turquoise::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: rgb(var(--c-turquoise));
+        }
+
+        .tag-turquoise {
+            color: rgb(var(--c-turquoise));
+            background: rgba(var(--c-turquoise), 0.08);
+            border: 1px solid rgba(var(--c-turquoise), 0.2);
+        }
+
+        .card.accent-turquoise::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 3px;
+            height: 100%;
+            background: rgb(var(--c-turquoise));
+            box-shadow: 0 0 10px rgb(var(--c-turquoise));
+        }
+
+        .filter-item.active-amber {
+            color: rgb(var(--c-amber));
+            font-weight: 600;
+            font-style: italic;
+        }
+
+        .filter-item.active-amber::before {
+            background: rgb(var(--c-amber));
+            opacity: 1;
+            box-shadow: 0 0 8px rgb(var(--c-amber));
+        }
+
+        .filter-item.active-amber::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: rgb(var(--c-amber));
+        }
+
+        .tag-amber {
+            color: rgb(var(--c-amber));
+            background: rgba(var(--c-amber), 0.08);
+            border: 1px solid rgba(var(--c-amber), 0.2);
+        }
+
+        .card.accent-amber::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 3px;
+            height: 100%;
+            background: rgb(var(--c-amber));
+            box-shadow: 0 0 10px rgb(var(--c-amber));
+        }
+
+        .filter-item.active-ruby {
+            color: rgb(var(--c-ruby));
+            font-weight: 600;
+            font-style: italic;
+        }
+
+        .filter-item.active-ruby::before {
+            background: rgb(var(--c-ruby));
+            opacity: 1;
+            box-shadow: 0 0 8px rgb(var(--c-ruby));
+        }
+
+        .filter-item.active-ruby::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: rgb(var(--c-ruby));
+        }
+
+        .tag-ruby {
+            color: rgb(var(--c-ruby));
+            background: rgba(var(--c-ruby), 0.08);
+            border: 1px solid rgba(var(--c-ruby), 0.2);
+        }
+
+        .card.accent-ruby::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 3px;
+            height: 100%;
+            background: rgb(var(--c-ruby));
+            box-shadow: 0 0 10px rgb(var(--c-ruby));
+        }
+
+        .filter-item.active-peridot {
+            color: rgb(var(--c-peridot));
+            font-weight: 600;
+            font-style: italic;
+        }
+
+        .filter-item.active-peridot::before {
+            background: rgb(var(--c-peridot));
+            opacity: 1;
+            box-shadow: 0 0 8px rgb(var(--c-peridot));
+        }
+
+        .filter-item.active-peridot::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: rgb(var(--c-peridot));
+        }
+
+        .tag-peridot {
+            color: rgb(var(--c-peridot));
+            background: rgba(var(--c-peridot), 0.08);
+            border: 1px solid rgba(var(--c-peridot), 0.2);
+        }
+
+        .card.accent-peridot::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 3px;
+            height: 100%;
+            background: rgb(var(--c-peridot));
+            box-shadow: 0 0 10px rgb(var(--c-peridot));
+        }
+
+        .add-tag-btn {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 1px dashed var(--text-sub);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-sub);
+            flex-shrink: 0;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .add-tag-btn:active {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border-color: #fff;
+        }
+
+        .list-container {
+            padding: 0 24px 120px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            min-height: 50vh;
+        }
+
+        .card {
+            background: var(--card-bg-gradient);
+            border-radius: 4px;
+            padding: 28px 24px;
+            position: relative;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .card:active {
+            transform: scale(0.98);
+        }
+
+        .card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+        }
+
+        .card-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 18px;
+            font-weight: 600;
+            color: #fff;
+            letter-spacing: 0.5px;
+        }
+
+        .card-icon {
+            color: #333;
+            cursor: pointer;
+            transition: color 0.2s;
+            font-size: 16px;
+            padding: 5px;
+        }
+
+        .card-icon.starred {
+            color: rgb(var(--c-gold));
+            text-shadow: 0 0 10px rgba(var(--c-gold), 0.4);
+        }
+
+        .card-body {
+            font-size: 13px;
+            line-height: 1.8;
+            color: #8A96A3;
+            font-weight: 300;
+            margin-bottom: 24px;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .card-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.04);
+            padding-top: 16px;
+        }
+
+        .tag-pill {
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 5px 12px;
+            border-radius: 2px;
+            backdrop-filter: blur(4px);
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .time-text {
+            font-size: 11px;
+            color: #555;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .empty-state {
+            display: none;
+            text-align: center;
+            color: var(--text-sub);
+            padding-top: 40px;
+            font-size: 14px;
+        }
+
+        .fab-btn {
+            position: fixed;
+            bottom: calc(35px + var(--safe-area-bottom));
+            right: 24px;
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: #08090B;
+            border: 1px solid rgba(var(--c-blue), 0.5);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.8), 0 0 15px rgba(var(--c-blue), 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgb(var(--c-blue));
+            font-size: 22px;
+            z-index: 99;
+            animation: pulse-blue 3s infinite;
+            transition: transform 0.2s;
+            cursor: pointer;
+        }
+
+        .fab-btn:active {
+            transform: scale(0.92);
+            box-shadow: 0 0 25px rgba(var(--c-blue), 0.6);
+            border-color: rgba(var(--c-blue), 1);
+        }
+
+        /* 模态框 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            z-index: 200;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal-content {
+            background: #101216;
+            width: 85%;
+            max-width: 340px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            padding: 24px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+            transform: translateY(20px);
+            transition: transform 0.3s;
+        }
+
+        .modal-overlay.show .modal-content {
+            transform: translateY(0);
+        }
+
+        .modal-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 20px;
+            color: #fff;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .modal-input,
+        .modal-textarea {
+            width: 100%;
+            background: #08090B;
+            border: 1px solid var(--border-color);
+            padding: 12px;
+            color: #fff;
+            border-radius: 4px;
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .modal-textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .modal-input:focus,
+        .modal-textarea:focus {
+            border-color: rgb(var(--c-blue));
+            outline: none;
+        }
+
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            margin-bottom: 24px;
+        }
+
+        .color-option {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: transform 0.2s;
+        }
+
+        .color-option.selected {
+            transform: scale(1.2);
+            border-color: #fff;
+        }
+
+        .bg-gold {
+            background: rgb(var(--c-gold));
+        }
+
+        .bg-blue {
+            background: rgb(var(--c-blue));
+        }
+
+        .bg-crimson {
+            background: rgb(var(--c-crimson));
+        }
+
+        .bg-purple {
+            background: rgb(var(--c-purple));
+        }
+
+        .bg-emerald {
+            background: rgb(var(--c-emerald));
+        }
+
+        .bg-silver {
+            background: rgb(var(--c-silver));
+        }
+
+        .bg-turquoise {
+            background: rgb(var(--c-turquoise));
+        }
+
+        .bg-amber {
+            background: rgb(var(--c-amber));
+        }
+
+        .bg-ruby {
+            background: rgb(var(--c-ruby));
+        }
+
+        .bg-peridot {
+            background: rgb(var(--c-peridot));
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-right-btns {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn-text {
+            background: none;
+            border: none;
+            color: var(--text-sub);
+            font-size: 14px;
+            cursor: pointer;
+            padding: 8px 16px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, rgb(var(--c-blue)), #0056B3);
+            border: none;
+            color: #fff;
+            padding: 8px 20px;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .btn-delete {
+            color: rgb(var(--c-crimson));
+            background: none;
+            border: none;
+            font-size: 14px;
+            cursor: pointer;
+            padding: 8px;
+            display: none;
+        }
+
+        .btn-delete.visible {
+            display: block;
+        }
+
+        .category-select {
+            width: 100%;
+            background: #08090B;
+            border: 1px solid var(--border-color);
+            padding: 12px;
+            color: #fff;
+            border-radius: 4px;
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+        }
+
+        .category-select:focus {
+            border-color: rgb(var(--c-blue));
+            outline: none;
+        }
+
+        .search-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(8, 9, 11, 0.98);
+            z-index: 150;
+            display: none;
+            padding: 20px;
+        }
+
+        .search-overlay.show {
+            display: block;
+        }
+
+        .search-box {
+            width: 100%;
+            background: #15181E;
+            border: 1px solid var(--border-color);
+            padding: 16px;
+            color: #fff;
+            border-radius: 8px;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        .search-box:focus {
+            border-color: rgb(var(--c-blue));
+            outline: none;
+        }
+
+        .search-results {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .close-search {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+            border: none;
+            color: #fff;
+            font-size: 18px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="ambient-top"></div>
+    <div class="ambient-bottom"></div>
+
+    <header>
+        <div class="brand">
+            <span class="brand-subtitle">PRIVATE WORKSPACE</span>
+            <span class="brand-title">M System</span>
+        </div>
+        <div class="header-actions">
+            <div class="icon-btn" id="searchBtn">
+                <i class="fas fa-search"></i>
+            </div>
+            <div class="icon-btn" id="logoutBtn">
+                <i class="fas fa-sign-out-alt"></i>
+            </div>
+        </div>
+    </header>
+
+    <div class="filter-scroll" id="filterScroll">
+        <div class="add-tag-btn" id="addTagBtn">
+            <i class="fas fa-plus"></i>
+        </div>
+    </div>
+
+    <div class="list-container" id="cardList">
+        <div class="empty-state" id="emptyState">
+            <i class="fas fa-wind" style="font-size: 24px; margin-bottom: 10px; opacity: 0.5;"></i>
+            <p>No items found.</p>
+        </div>
+    </div>
+
+    <button class="fab-btn" id="fabBtn"><i class="fas fa-plus"></i></button>
+
+    <!-- 分类模态框 -->
+    <div class="modal-overlay" id="tagModal">
+        <div class="modal-content">
+            <div class="modal-title" id="tagModalTitle">New Label</div>
+            <div class="input-group">
+                <input type="text" class="modal-input" id="tagNameInput" placeholder="Enter tag name...">
+            </div>
+            <div class="color-grid" id="colorGrid">
+                <div class="color-option bg-gold selected" data-color="gold"></div>
+                <div class="color-option bg-blue" data-color="blue"></div>
+                <div class="color-option bg-crimson" data-color="crimson"></div>
+                <div class="color-option bg-purple" data-color="purple"></div>
+                <div class="color-option bg-emerald" data-color="emerald"></div>
+                <div class="color-option bg-silver" data-color="silver"></div>
+                <div class="color-option bg-turquoise" data-color="turquoise"></div>
+                <div class="color-option bg-amber" data-color="amber"></div>
+                <div class="color-option bg-ruby" data-color="ruby"></div>
+                <div class="color-option bg-peridot" data-color="peridot"></div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-delete" id="deleteTagBtn"><i class="fas fa-trash"></i> Delete</button>
+                <div class="modal-right-btns">
+                    <button class="btn-text" id="cancelTagBtn">Cancel</button>
+                    <button class="btn-primary" id="saveTagBtn">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 卡片模态框 -->
+    <div class="modal-overlay" id="cardModal">
+        <div class="modal-content">
+            <div class="modal-title" id="cardModalTitle">New Card</div>
+            <div class="input-group">
+                <input type="text" class="modal-input" id="cardTitleInput" placeholder="Card title...">
+            </div>
+            <div class="input-group">
+                <textarea class="modal-textarea" id="cardContentInput" placeholder="Card content..."></textarea>
+            </div>
+            <div class="input-group">
+                <select class="category-select" id="cardCategorySelect">
+                    <option value="">Select category...</option>
+                </select>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-delete" id="deleteCardBtn"><i class="fas fa-trash"></i> Delete</button>
+                <div class="modal-right-btns">
+                    <button class="btn-text" id="cancelCardBtn">Cancel</button>
+                    <button class="btn-primary" id="saveCardBtn">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 搜索覆盖层 -->
+    <div class="search-overlay" id="searchOverlay">
+        <button class="close-search" id="closeSearch"><i class="fas fa-times"></i></button>
+        <input type="text" class="search-box" id="searchBox" placeholder="Search cards...">
+        <div class="search-results" id="searchResults"></div>
+    </div>
+
+    <script src="/api.js"></script>
+    <script>
+        // 检查登录状态
+        if (localStorage.getItem('isAuthenticated') !== 'true') {
+            window.location.href = '/login.html';
+        }
+
+        // 全局变量
+        let categories = [];
+        let cards = [];
+        let currentFilter = 'all';
+        let editingCategoryIndex = -1;
+        let editingCardId = null;
+        let selectedColor = 'gold';
+
+        // DOM 元素
+        const filterScroll = document.getElementById('filterScroll');
+        const addTagBtn = document.getElementById('addTagBtn');
+        const cardList = document.getElementById('cardList');
+        const emptyState = document.getElementById('emptyState');
+        const fabBtn = document.getElementById('fabBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const searchBtn = document.getElementById('searchBtn');
+
+        // 分类模态框
+        const tagModal = document.getElementById('tagModal');
+        const tagModalTitle = document.getElementById('tagModalTitle');
+        const tagNameInput = document.getElementById('tagNameInput');
+        const colorOptions = document.querySelectorAll('.color-option');
+        const cancelTagBtn = document.getElementById('cancelTagBtn');
+        const saveTagBtn = document.getElementById('saveTagBtn');
+        const deleteTagBtn = document.getElementById('deleteTagBtn');
+
+        // 卡片模态框
+        const cardModal = document.getElementById('cardModal');
+        const cardModalTitle = document.getElementById('cardModalTitle');
+        const cardTitleInput = document.getElementById('cardTitleInput');
+        const cardContentInput = document.getElementById('cardContentInput');
+        const cardCategorySelect = document.getElementById('cardCategorySelect');
+        const cancelCardBtn = document.getElementById('cancelCardBtn');
+        const saveCardBtn = document.getElementById('saveCardBtn');
+        const deleteCardBtn = document.getElementById('deleteCardBtn');
+
+        // 搜索
+        const searchOverlay = document.getElementById('searchOverlay');
+        const searchBox = document.getElementById('searchBox');
+        const searchResults = document.getElementById('searchResults');
+        const closeSearch = document.getElementById('closeSearch');
+
+        // 初始化
+        async function init() {
+            try {
+                await loadCategories();
+                await loadCards();
+                renderCategories();
+                renderCards();
+            } catch (error) {
+                console.error('Initialization error:', error);
+                alert('Failed to load data. Please refresh the page.');
+            }
+        }
+
+        // 加载分类
+        async function loadCategories() {
+            try {
+                categories = await api.getCategories();
+                // 添加 "All" 分类
+                categories.unshift({ id: 'all', name: 'Overview' });
+            } catch (error) {
+                console.error('Failed to load categories:', error);
+                categories = [{ id: 'all', name: 'Overview' }];
+            }
+        }
+
+        // 加载卡片
+        async function loadCards() {
+            try {
+                cards = await api.getCards();
+            } catch (error) {
+                console.error('Failed to load cards:', error);
+                cards = [];
+            }
+        }
+
+        // 渲染分类
+        function renderCategories() {
+            const existingItems = filterScroll.querySelectorAll('.filter-item');
+            existingItems.forEach(el => el.remove());
+
+            categories.forEach((category, index) => {
+                const color = category.id === 'all' ? 'gold' : colorManager.getColor(category.id);
+                const el = document.createElement('div');
+                el.className = `filter-item ${index === 0 ? 'active-' + color : ''}`;
+                el.setAttribute('data-filter', category.id);
+                el.setAttribute('data-color', color);
+                el.innerText = category.name;
+
+                filterScroll.insertBefore(el, addTagBtn);
+
+                el.addEventListener('click', () => handleFilterClick(el, category.id));
+
+                if (category.id !== 'all') {
+                    let pressTimer;
+                    el.addEventListener('touchstart', (e) => {
+                        pressTimer = setTimeout(() => {
+                            if (navigator.vibrate) navigator.vibrate(50);
+                            openTagModal(index);
+                        }, 600);
+                    });
+                    el.addEventListener('touchend', () => clearTimeout(pressTimer));
+                    el.addEventListener('touchmove', () => clearTimeout(pressTimer));
+                    el.addEventListener('contextmenu', (e) => {
+                        e.preventDefault();
+                        openTagModal(index);
+                    });
+                }
+            });
+
+            updateCategorySelect();
+        }
+
+        // 更新分类下拉框
+        function updateCategorySelect() {
+            cardCategorySelect.innerHTML = '<option value="">Select category...</option>';
+            categories.forEach(cat => {
+                if (cat.id !== 'all') {
+                    const option = document.createElement('option');
+                    option.value = cat.id;
+                    option.textContent = cat.name;
+                    cardCategorySelect.appendChild(option);
+                }
+            });
+        }
+
+        // 渲染卡片
+        function renderCards() {
+            cardList.innerHTML = '';
+            let visibleCount = 0;
+
+            const filteredCards = currentFilter === 'all'
+                ? cards
+                : cards.filter(card => card.category_id == currentFilter);
+
+            filteredCards.forEach(card => {
+                const cardEl = createCardElement(card);
+                cardList.appendChild(cardEl);
+                visibleCount++;
+            });
+
+            if (visibleCount === 0) {
+                cardList.appendChild(emptyState);
+                emptyState.style.display = 'block';
+            } else {
+                emptyState.style.display = 'none';
+            }
+        }
+
+        // 创建卡片元素
+        function createCardElement(card) {
+            const category = categories.find(c => c.id == card.category_id);
+            const color = category ? colorManager.getColor(category.id) : 'blue';
+
+            const cardEl = document.createElement('div');
+            cardEl.className = `card accent-${color} fade-in`;
+            cardEl.setAttribute('data-id', card.id);
+
+            cardEl.innerHTML = `
+                <div class="card-top">
+                    <div class="card-title">${escapeHtml(card.title)}</div>
+                    <i class="${card.is_favorite ? 'fas' : 'far'} fa-star card-icon ${card.is_favorite ? 'starred' : ''}" data-id="${card.id}"></i>
+                </div>
+                <div class="card-body">${escapeHtml(card.content)}</div>
+                <div class="card-meta">
+                    <span class="tag-pill tag-${color}">
+                        <i class="fas fa-tag" style="font-size:8px;"></i> ${category ? category.name : 'Unknown'}
+                    </span>
+                    <span class="time-text">${formatTime(card.created_at)}</span>
+                </div>
+            `;
+
+            // 点击卡片编辑
+            cardEl.addEventListener('click', (e) => {
+                if (!e.target.classList.contains('card-icon')) {
+                    openCardModal(card.id);
+                }
+            });
+
+            // 收藏功能
+            const starIcon = cardEl.querySelector('.card-icon');
+            starIcon.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                await toggleFavorite(card.id, starIcon);
+            });
+
+            return cardEl;
+        }
+
+        // 切换收藏
+        async function toggleFavorite(cardId, starIcon) {
+            const card = cards.find(c => c.id === cardId);
+            if (!card) return;
+
+            try {
+                starIcon.classList.remove('star-anim');
+                void starIcon.offsetWidth;
+                starIcon.classList.add('star-anim');
+
+                const newFavoriteStatus = !card.is_favorite;
+                await api.updateCard(cardId, { is_favorite: newFavoriteStatus });
+
+                card.is_favorite = newFavoriteStatus;
+
+                if (newFavoriteStatus) {
+                    starIcon.classList.add('starred', 'fas');
+                    starIcon.classList.remove('far');
+                } else {
+                    starIcon.classList.remove('starred', 'fas');
+                    starIcon.classList.add('far');
+                }
+            } catch (error) {
+                console.error('Failed to toggle favorite:', error);
+                alert('Failed to update favorite status');
+            }
+        }
+
+        // 筛选处理
+        function handleFilterClick(clickedEl, categoryId) {
+            const allItems = filterScroll.querySelectorAll('.filter-item');
+            allItems.forEach(item => item.className = 'filter-item');
+
+            const color = clickedEl.getAttribute('data-color');
+            clickedEl.classList.add(`active-${color}`);
+
+            currentFilter = categoryId;
+            renderCards();
+        }
+
+        // 打开分类模态框
+        function openTagModal(index = -1) {
+            tagModal.classList.add('show');
+            editingCategoryIndex = index;
+
+            if (index === -1) {
+                tagModalTitle.innerText = "New Label";
+                saveTagBtn.innerText = "Create";
+                tagNameInput.value = '';
+                selectedColor = 'gold';
+                deleteTagBtn.classList.remove('visible');
+                updateColorSelection('gold');
+            } else {
+                const category = categories[index];
+                tagModalTitle.innerText = "Edit Label";
+                saveTagBtn.innerText = "Update";
+                tagNameInput.value = category.name;
+                selectedColor = colorManager.getColor(category.id);
+                deleteTagBtn.classList.add('visible');
+                updateColorSelection(selectedColor);
+            }
+
+            if (window.innerWidth > 500) tagNameInput.focus();
+        }
+
+        function updateColorSelection(color) {
+            colorOptions.forEach(opt => opt.classList.remove('selected'));
+            const target = document.querySelector(`.color-option[data-color="${color}"]`);
+            if (target) target.classList.add('selected');
+        }
+
+        function closeTagModal() {
+            tagModal.classList.remove('show');
+        }
+
+        // 保存分类
+        saveTagBtn.addEventListener('click', async () => {
+            const name = tagNameInput.value.trim();
+            if (!name) return;
+
+            try {
+                if (editingCategoryIndex === -1) {
+                    // 创建新分类
+                    const newCategory = await api.createCategory(name);
+                    colorManager.setColor(newCategory.id, selectedColor);
+                    await loadCategories();
+                } else {
+                    // 更新分类
+                    const category = categories[editingCategoryIndex];
+                    await api.updateCategory(category.id, name);
+                    colorManager.setColor(category.id, selectedColor);
+                    await loadCategories();
+                }
+
+                renderCategories();
+                closeTagModal();
+
+                if (editingCategoryIndex === -1) {
+                    setTimeout(() => filterScroll.scrollLeft = filterScroll.scrollWidth, 100);
+                }
+            } catch (error) {
+                console.error('Failed to save category:', error);
+                alert('Failed to save category');
+            }
+        });
+
+        // 删除分类
+        deleteTagBtn.addEventListener('click', async () => {
+            if (editingCategoryIndex > -1) {
+                if (confirm('Delete this label? All cards in this category will remain but be uncategorized.')) {
+                    try {
+                        const category = categories[editingCategoryIndex];
+                        await api.deleteCategory(category.id);
+                        colorManager.deleteColor(category.id);
+                        await loadCategories();
+                        renderCategories();
+                        closeTagModal();
+                        currentFilter = 'all';
+                        renderCards();
+                    } catch (error) {
+                        console.error('Failed to delete category:', error);
+                        alert('Failed to delete category');
+                    }
+                }
+            }
+        });
+
+        cancelTagBtn.addEventListener('click', closeTagModal');
+        tagModal.addEventListener('click', (e) => { if (e.target === tagModal) closeTagModal(); });
+        addTagBtn.addEventListener('click', () => openTagModal(-1));
+
+        colorOptions.forEach(opt => {
+            opt.addEventListener('click', () => {
+                selectedColor = opt.getAttribute('data-color');
+                updateColorSelection(selectedColor);
+            });
+        });
+
+        // 打开卡片模态框
+        function openCardModal(cardId = null) {
+            cardModal.classList.add('show');
+            editingCardId = cardId;
+
+            if (cardId === null) {
+                cardModalTitle.innerText = "New Card";
+                saveCardBtn.innerText = "Create";
+                cardTitleInput.value = '';
+                cardContentInput.value = '';
+                cardCategorySelect.value = currentFilter === 'all' ? '' : currentFilter;
+                deleteCardBtn.classList.remove('visible');
+            } else {
+                const card = cards.find(c => c.id === cardId);
+                if (card) {
+                    cardModalTitle.innerText = "Edit Card";
+                    saveCardBtn.innerText = "Update";
+                    cardTitleInput.value = card.title;
+                    cardContentInput.value = card.content;
+                    cardCategorySelect.value = card.category_id || '';
+                    deleteCardBtn.classList.add('visible');
+                }
+            }
+
+            if (window.innerWidth > 500) cardTitleInput.focus();
+        }
+
+        function closeCardModal() {
+            cardModal.classList.remove('show');
+        }
+
+        // 保存卡片
+        saveCardBtn.addEventListener('click', async () => {
+            const title = cardTitleInput.value.trim();
+            const content = cardContentInput.value.trim();
+            const categoryId = cardCategorySelect.value;
+
+            if (!title || !content) {
+                alert('Please fill in both title and content');
+                return;
+            }
+
+            try {
+                const cardData = {
+                    title,
+                    content,
+                    category_id: categoryId ? parseInt(categoryId) : null,
+                    is_favorite: false
+                };
+
+                if (editingCardId === null) {
+                    await api.createCard(cardData);
+                } else {
+                    await api.updateCard(editingCardId, cardData);
+                }
+
+                await loadCards();
+                renderCards();
+                closeCardModal();
+            } catch (error) {
+                console.error('Failed to save card:', error);
+                alert('Failed to save card');
+            }
+        });
+
+        // 删除卡片
+        deleteCardBtn.addEventListener('click', async () => {
+            if (editingCardId && confirm('Delete this card?')) {
+                try {
+                    await api.deleteCard(editingCardId);
+                    await loadCards();
+                    renderCards();
+                    closeCardModal();
+                } catch (error) {
+                    console.error('Failed to delete card:', error);
+                    alert('Failed to delete card');
+                }
+            }
+        });
+
+        cancelCardBtn.addEventListener('click', closeCardModal);
+        cardModal.addEventListener('click', (e) => { if (e.target === cardModal) closeCardModal(); });
+        fabBtn.addEventListener('click', () => openCardModal(null));
+
+        // 搜索功能
+        searchBtn.addEventListener('click', () => {
+            searchOverlay.classList.add('show');
+            searchBox.focus();
+        });
+
+        closeSearch.addEventListener('click', () => {
+            searchOverlay.classList.remove('show');
+            searchBox.value = '';
+            searchResults.innerHTML = '';
+        });
+
+        searchBox.addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase().trim();
+            searchResults.innerHTML = '';
+
+            if (!query) return;
+
+            const results = cards.filter(card =>
+                card.title.toLowerCase().includes(query) ||
+                card.content.toLowerCase().includes(query)
+            );
+
+            results.forEach(card => {
+                const cardEl = createCardElement(card);
+                searchResults.appendChild(cardEl);
+            });
+
+            if (results.length === 0) {
+                searchResults.innerHTML = '<div class="empty-state" style="display:block;">No results found</div>';
+            }
+        });
+
+        // 退出登录
+        logoutBtn.addEventListener('click', () => {
+            if (confirm('Are you sure you want to logout?')) {
+                localStorage.removeItem('isAuthenticated');
+                window.location.href = '/login.html';
+            }
+        });
+
+        // HTML 转义
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // 启动应用
+        init();
+    </script>
+</body>
+
+</html>
