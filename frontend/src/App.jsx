@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { api } from './api';
 import { Card } from './components/Card';
+import { CardDetail } from './components/CardDetail';
 import { CategoryFilter } from './components/CategoryFilter';
 import { Login } from './components/Login';
 
@@ -11,6 +12,8 @@ function App() {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [isCreating, setIsCreating] = useState(false);
   const [newCard, setNewCard] = useState({ title: '', content: '' });
+  const [selectedCard, setSelectedCard] = useState(null);
+  const [editingCard, setEditingCard] = useState(null);
 
   const fetchData = async () => {
     const [cardsData, catsData] = await Promise.all([
@@ -72,6 +75,20 @@ function App() {
     setIsAuthenticated(false);
     setCards([]);
     setCategories([]);
+  };
+
+  const handleCardClick = (card) => {
+    setSelectedCard(card);
+  };
+
+  const handleCloseDetail = () => {
+    setSelectedCard(null);
+    setEditingCard(null);
+  };
+
+  const handleEditFromDetail = () => {
+    setEditingCard(selectedCard);
+    setSelectedCard(null);
   };
 
   // Show login page if not authenticated
@@ -145,6 +162,7 @@ function App() {
             categories={categories}
             onUpdate={handleUpdateCard}
             onDelete={handleDeleteCard}
+            onCardClick={handleCardClick}
           />
         ))}
       </div>
@@ -152,6 +170,61 @@ function App() {
       {filteredCards.length === 0 && !isCreating && (
         <div style={{ textAlign: 'center', color: 'var(--text-secondary)', marginTop: '4rem' }}>
           <p>没有找到卡片...</p>
+        </div>
+      )}
+
+      {selectedCard && (
+        <CardDetail
+          card={selectedCard}
+          onClose={handleCloseDetail}
+          onUpdate={handleUpdateCard}
+          onEdit={handleEditFromDetail}
+        />
+      )}
+
+      {editingCard && (
+        <div className="modal-overlay" onClick={() => setEditingCard(null)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{
+            background: 'white',
+            borderRadius: 'var(--border-radius)',
+            padding: '2rem',
+            maxWidth: '600px',
+            width: '90%',
+            boxShadow: 'var(--shadow)'
+          }}>
+            <h3 className="mb-4">编辑卡片</h3>
+            <div className="flex flex-col gap-4">
+              <input
+                value={editingCard.title}
+                onChange={(e) => setEditingCard({ ...editingCard, title: e.target.value })}
+                placeholder="标题"
+                autoFocus
+              />
+              <textarea
+                value={editingCard.content}
+                onChange={(e) => setEditingCard({ ...editingCard, content: e.target.value })}
+                placeholder="内容..."
+                rows={8}
+                style={{ resize: 'vertical' }}
+              />
+              <select
+                value={editingCard.category_id || ''}
+                onChange={(e) => setEditingCard({ ...editingCard, category_id: e.target.value ? parseInt(e.target.value) : null })}
+              >
+                <option value="">无分类</option>
+                {categories.map(c => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+              <div className="flex justify-end gap-2">
+                <button className="btn" onClick={() => setEditingCard(null)}>取消</button>
+                <button className="btn btn-primary" onClick={() => {
+                  handleUpdateCard(editingCard.id, editingCard);
+                  setEditingCard(null);
+                }}>保存</button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

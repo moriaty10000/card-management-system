@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-export function Card({ card, onUpdate, onDelete, categories }) {
+export function Card({ card, onUpdate, onDelete, categories, onCardClick }) {
     const [isEditing, setIsEditing] = useState(false);
     const [editedCard, setEditedCard] = useState({ ...card });
 
@@ -14,19 +14,30 @@ export function Card({ card, onUpdate, onDelete, categories }) {
         onUpdate(card.id, { is_favorite: !card.is_favorite });
     };
 
+    const handleCardClick = () => {
+        if (!isEditing) {
+            onCardClick(card);
+        }
+    };
+
     return (
-        <div className="card" style={{
-            backgroundColor: 'var(--card-bg)',
-            borderRadius: 'var(--border-radius)',
-            padding: '1.5rem',
-            boxShadow: 'var(--shadow)',
-            transition: 'transform 0.2s, box-shadow 0.2s',
-            position: 'relative',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '1rem',
-            height: '100%'
-        }}>
+        <div
+            className="card"
+            style={{
+                backgroundColor: 'var(--card-bg)',
+                borderRadius: 'var(--border-radius)',
+                padding: '1.5rem',
+                boxShadow: 'var(--shadow)',
+                transition: 'transform 0.2s, box-shadow 0.2s',
+                position: 'relative',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '1rem',
+                height: '100%',
+                cursor: isEditing ? 'default' : 'pointer'
+            }}
+            onClick={handleCardClick}
+        >
             {isEditing ? (
                 <>
                     <input
@@ -52,8 +63,8 @@ export function Card({ card, onUpdate, onDelete, categories }) {
                         ))}
                     </select>
                     <div className="flex gap-2 justify-end">
-                        <button className="btn" onClick={() => setIsEditing(false)}>取消</button>
-                        <button className="btn btn-primary" onClick={handleSave}>保存</button>
+                        <button className="btn" onClick={(e) => { e.stopPropagation(); setIsEditing(false); }}>取消</button>
+                        <button className="btn btn-primary" onClick={(e) => { e.stopPropagation(); handleSave(); }}>保存</button>
                     </div>
                 </>
             ) : (
@@ -68,7 +79,17 @@ export function Card({ card, onUpdate, onDelete, categories }) {
                             ★
                         </button>
                     </div>
-                    <p style={{ margin: 0, color: 'var(--text-secondary)', whiteSpace: 'pre-wrap', flex: 1 }}>
+                    <p style={{
+                        margin: 0,
+                        color: 'var(--text-secondary)',
+                        whiteSpace: 'pre-wrap',
+                        flex: 1,
+                        overflow: 'hidden',
+                        display: '-webkit-box',
+                        WebkitLineClamp: 3,
+                        WebkitBoxOrient: 'vertical',
+                        lineHeight: '1.6'
+                    }}>
                         {card.content}
                     </p>
                     <div className="flex justify-between items-center mt-auto pt-4 border-t" style={{ borderColor: '#f0f0f0' }}>
@@ -76,8 +97,8 @@ export function Card({ card, onUpdate, onDelete, categories }) {
                             {card.category ? card.category.name : '未分类'}
                         </span>
                         <div className="flex gap-2">
-                            <button className="btn-icon" onClick={() => setIsEditing(true)} title="编辑">✎</button>
-                            <button className="btn-icon" onClick={() => onDelete(card.id)} title="删除" style={{ color: 'var(--danger)' }}>🗑</button>
+                            <button className="btn-icon" onClick={(e) => { e.stopPropagation(); setIsEditing(true); }} title="编辑">✎</button>
+                            <button className="btn-icon" onClick={(e) => { e.stopPropagation(); onDelete(card.id); }} title="删除" style={{ color: 'var(--danger)' }}>🗑</button>
                         </div>
                     </div>
                 </>
