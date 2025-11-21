@@ -1266,7 +1266,7 @@
         // 创建卡片元素
         function createCardElement(card) {
             const category = categories.find(c => c.id == card.category_id);
-            const color = category ? colorManager.getColor(category.id) : 'blue';
+            const color = category ? colorManager.getColor(category.id) : 'gold';
 
             const cardEl = document.createElement('div');
             cardEl.className = `card accent-${color} fade-in`;
