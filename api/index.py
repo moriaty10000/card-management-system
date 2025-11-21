@@ -104,45 +104,80 @@ class handler(BaseHTTPRequestHandler):
         post_data = self.rfile.read(content_length)
         data = json.loads(post_data.decode('utf-8'))
         
-        # Extract card_id from path like /api/cards/1
+        # Extract ID from path like /api/cards/1 or /api/categories/1
         path_parts = self.path.split('/')
-        if len(path_parts) >= 4 and path_parts[2] == 'cards':
-            card_id = int(path_parts[3])
-            cards = get_data("cards_list") or []
+        if len(path_parts) >= 4:
+            resource_type = path_parts[2]
+            resource_id = int(path_parts[3])
             
-            for card in cards:
-                if card['id'] == card_id:
-                    if 'title' in data:
-                        card['title'] = data['title']
-                    if 'content' in data:
-                        card['content'] = data['content']
-                    if 'is_favorite' in data:
-                        card['is_favorite'] = data['is_favorite']
-                    if 'category_id' in data:
-                        card['category_id'] = data['category_id']
-                    
-                    set_data("cards_list", cards)
-                    self._set_headers()
-                    self.wfile.write(json.dumps(card).encode())
-                    return
-            
-            self._set_headers(404)
-            self.wfile.write(json.dumps({"error": "Card not found"}).encode())
+            if resource_type == 'cards':
+                cards = get_data("cards_list") or []
+                
+                for card in cards:
+                    if card['id'] == resource_id:
+                        if 'title' in data:
+                            card['title'] = data['title']
+                        if 'content' in data:
+                            card['content'] = data['content']
+                        if 'is_favorite' in data:
+                            card['is_favorite'] = data['is_favorite']
+                        if 'category_id' in data:
+                            card['category_id'] = data['category_id']
+                        
+                        set_data("cards_list", cards)
+                        self._set_headers()
+                        self.wfile.write(json.dumps(card).encode())
+                        return
+                
+                self._set_headers(404)
+                self.wfile.write(json.dumps({"error": "Card not found"}).encode())
+                
+            elif resource_type == 'categories':
+                categories = get_data("categories_list") or []
+                
+                for category in categories:
+                    if category['id'] == resource_id:
+                        if 'name' in data:
+                            category['name'] = data['name']
+                        
+                        set_data("categories_list", categories)
+                        self._set_headers()
+                        self.wfile.write(json.dumps(category).encode())
+                        return
+                
+                self._set_headers(404)
+                self.wfile.write(json.dumps({"error": "Category not found"}).encode())
+            else:
+                self._set_headers(404)
+                self.wfile.write(json.dumps({"error": "Not found"}).encode())
         else:
             self._set_headers(404)
             self.wfile.write(json.dumps({"error": "Not found"}).encode())
 
     def do_DELETE(self):
         path_parts = self.path.split('/')
-        if len(path_parts) >= 4 and path_parts[2] == 'cards':
-            card_id = int(path_parts[3])
-            cards = get_data("cards_list") or []
+        if len(path_parts) >= 4:
+            resource_type = path_parts[2]
+            resource_id = int(path_parts[3])
             
-            cards = [c for c in cards if c['id'] != card_id]
-            set_data("cards_list", cards)
-            
-            self._set_headers()
-            self.wfile.write(json.dumps({"ok": True}).encode())
+            if resource_type == 'cards':
+                cards = get_data("cards_list") or []
+                cards = [c for c in cards if c['id'] != resource_id]
+                set_data("cards_list", cards)
+                
+                self._set_headers()
+                self.wfile.write(json.dumps({"ok": True}).encode())
+                
+            elif resource_type == 'categories':
+                categories = get_data("categories_list") or []
+                categories = [c for c in categories if c['id'] != resource_id]
+                set_data("categories_list", categories)
+                
+                self._set_headers()
+                self.wfile.write(json.dumps({"ok": True}).encode())
+            else:
+                self._set_headers(404)
+                self.wfile.write(json.dumps({"error": "Not found"}).encode())
         else:
             self._set_headers(404)
             self.wfile.write(json.dumps({"error": "Not found"}).encode())
