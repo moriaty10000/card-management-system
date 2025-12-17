@@ -139,11 +139,18 @@ app.add_middleware(
 def startup_db():
     try:
         # Create tables on startup
+        # Verify engine connection first
+        with engine.connect() as conn:
+            pass
         Base.metadata.create_all(bind=engine)
         seed_data()
     except Exception as e:
         print(f"Startup DB Error: {e}")
-        # Log error but allow app to start
+        # Log error but allow app to start so /api/health works
+
+@app.get("/api/health")
+def health_check():
+    return {"status": "ok", "message": "Backend is running"}
 
 # Dependency
 def get_db():
