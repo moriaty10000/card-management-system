@@ -1,6 +1,7 @@
 fastapi
 uvicorn
 sqlalchemy
-pydantic<2.0.0
+pydantic
 redis
 pg8000
+mangum
