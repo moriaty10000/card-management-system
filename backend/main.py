@@ -45,14 +45,18 @@ class Card(Base):
     created_at = Column(String, default="")
     updated_at = Column(String, default="")
 
-Base.metadata.create_all(bind=engine)
+# Models definition...
+# (Keep models as they are)
 
-# Seed data if empty
+# Base.metadata.create_all(bind=engine)  <-- REMOVED from global scope
+
+# Seed data function (Keep definition)
 def seed_data():
     db = SessionLocal()
     try:
+        # Check if table exists first to avoid error if create_all failed/didn't run
+        # Actually create_all is safe to run repeatedly.
         if db.query(Category).count() == 0:
-            # Create default categories
             default_categories = [
                 Category(name='10000', color='blue'),
                 Category(name='Ry', color='crimson'),
@@ -61,7 +65,6 @@ def seed_data():
             db.add_all(default_categories)
             db.commit()
         if db.query(Card).count() == 0:
-            # Create a sample card
             from datetime import datetime
             now = datetime.utcnow().isoformat() + 'Z'
             sample_card = Card(
@@ -73,8 +76,34 @@ def seed_data():
             )
             db.add(sample_card)
             db.commit()
+    except Exception as e:
+        print(f"Seed data error: {e}")
     finally:
         db.close()
+
+# Initialize API
+app = FastAPI()
+
+# Add CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+@app.on_event("startup")
+def startup_db():
+    try:
+        # Create tables on startup
+        Base.metadata.create_all(bind=engine)
+        seed_data()
+    except Exception as e:
+        print(f"Startup DB Error: {e}")
+        # We don't raise here to allow the app to start even if DB fails, 
+        # so we can see the error in logs or /api/health if we had one.
+
 
 # Pydantic Schemas
 class CategoryBase(BaseModel):
