@@ -14,7 +14,7 @@ import os
 # Vercel Postgres provides POSTGRES_URL, ensure it starts with postgresql:// for SQLAlchemy
 database_url = os.getenv("POSTGRES_URL") or os.getenv("DATABASE_URL") or "sqlite:///./cards_v2.db"
 if database_url.startswith("postgres://"):
-    database_url = database_url.replace("postgres://", "postgresql://", 1)
+    database_url = database_url.replace("postgres://", "postgresql+pg8000://", 1)
 
 SQLALCHEMY_DATABASE_URL = database_url
 

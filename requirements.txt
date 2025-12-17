@@ -3,5 +3,4 @@ uvicorn
 sqlalchemy
 pydantic
 redis
-mangum
-psycopg2-binary
+pg8000
