@@ -1,6 +1,1 @@
-fastapi>=0.100.0
-uvicorn
-sqlalchemy>=2.0.0
-pydantic>=2.0.0
-pg8000
-mangum
+# requirements cleared for isolation test
