@@ -21,6 +21,15 @@ SQLALCHEMY_DATABASE_URL = database_url
 connect_args = {}
 if SQLALCHEMY_DATABASE_URL.startswith("sqlite"):
     connect_args = {"check_same_thread": False}
+elif "pg8000" in SQLALCHEMY_DATABASE_URL:
+    try:
+        import ssl
+        ssl_context = ssl.create_default_context()
+        ssl_context.check_hostname = False
+        ssl_context.verify_mode = ssl.CERT_NONE
+        connect_args["ssl_context"] = ssl_context
+    except Exception as e:
+        print(f"SSL Context creation failed: {e}")
 
 engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args=connect_args)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
