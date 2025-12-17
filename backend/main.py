@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel
 from typing import List, Optional
 from sqlalchemy import create_engine, Column, Integer, String, Boolean, ForeignKey
@@ -8,8 +8,8 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session, relationship, joinedload
 from fastapi.middleware.cors import CORSMiddleware
 import os
+import traceback
 
-# Database Setup
 # Database Setup
 # Vercel Postgres provides POSTGRES_URL, ensure it starts with postgresql:// for SQLAlchemy
 database_url = os.getenv("POSTGRES_URL") or os.getenv("DATABASE_URL") or "sqlite:///./cards_v2.db"
@@ -54,17 +54,10 @@ class Card(Base):
     created_at = Column(String, default="")
     updated_at = Column(String, default="")
 
-# Models definition...
-# (Keep models as they are)
-
-# Base.metadata.create_all(bind=engine)  <-- REMOVED from global scope
-
-# Seed data function (Keep definition)
+# Seed data function
 def seed_data():
     db = SessionLocal()
     try:
-        # Check if table exists first to avoid error if create_all failed/didn't run
-        # Actually create_all is safe to run repeatedly.
         if db.query(Category).count() == 0:
             default_categories = [
                 Category(name='10000', color='blue'),
@@ -90,30 +83,6 @@ def seed_data():
     finally:
         db.close()
 
-# Initialize API
-app = FastAPI()
-
-# Add CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-@app.on_event("startup")
-def startup_db():
-    try:
-        # Create tables on startup
-        Base.metadata.create_all(bind=engine)
-        seed_data()
-    except Exception as e:
-        print(f"Startup DB Error: {e}")
-        # We don't raise here to allow the app to start even if DB fails, 
-        # so we can see the error in logs or /api/health if we had one.
-
-
 # Pydantic Schemas
 class CategoryBase(BaseModel):
     name: str
@@ -125,7 +94,7 @@ class CategoryCreate(CategoryBase):
 class CategoryResponse(CategoryBase):
     id: int
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class CardBase(BaseModel):
     title: str
@@ -151,11 +120,12 @@ class CardResponse(CardBase):
     updated_at: Optional[str] = None
     category: Optional[CategoryResponse] = None
     class Config:
-        orm_mode = True
+        from_attributes = True
 
-# App Setup
+# Initialize API
 app = FastAPI()
 
+# Add CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -164,6 +134,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Startup Event
+@app.on_event("startup")
+def startup_db():
+    try:
+        # Create tables on startup
+        Base.metadata.create_all(bind=engine)
+        seed_data()
+    except Exception as e:
+        print(f"Startup DB Error: {e}")
+        # Log error but allow app to start
+
 # Dependency
 def get_db():
     db = SessionLocal()
@@ -171,11 +152,6 @@ def get_db():
         yield db
     finally:
         db.close()
-
-# Call seed_data on startup
-@app.on_event("startup")
-def startup_event():
-    seed_data()
 
 # Routes
 @app.post("/api/categories", response_model=CategoryResponse)
@@ -188,8 +164,6 @@ def create_category(category: CategoryCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(new_category)
     return new_category
-
-
 
 @app.put("/api/categories/{category_id}", response_model=CategoryResponse)
 def update_category(category_id: int, category: CategoryCreate, db: Session = Depends(get_db)):
@@ -208,11 +182,6 @@ def delete_category(category_id: int, db: Session = Depends(get_db)):
     db_category = db.query(Category).filter(Category.id == category_id).first()
     if not db_category:
         raise HTTPException(status_code=404, detail="Category not found")
-    
-    # Optional: Handle cards associated with this category
-    # For now, we'll just set their category_id to NULL (or let them be if nullable)
-    # SQLAlchemy relationship might handle this depending on cascade settings, 
-    # but our model has nullable=True for category_id, so they will just become uncategorized.
     
     db.delete(db_category)
     db.commit()
@@ -276,6 +245,18 @@ if os.path.exists("backend/static"):
         # Serve index.html for all non-API routes
         if not full_path.startswith("api"):
             return FileResponse("backend/static/index.html")
+
+# Global Exception Handler for Debugging (Temporary)
+@app.exception_handler(Exception)
+async def debug_exception_handler(request, exc):
+    return JSONResponse(
+        status_code=500,
+        content={
+            "message": "Internal Server Error",
+            "detail": str(exc),
+            "traceback": traceback.format_exc().splitlines()
+        }
+    )
 
 if __name__ == "__main__":
     import uvicorn
