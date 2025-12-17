@@ -1,17 +1,4 @@
-from http.server import BaseHTTPRequestHandler
-import json
+from backend.main import app
+from mangum import Mangum
 
-class handler(BaseHTTPRequestHandler):
-    def do_GET(self):
-        self.send_response(200)
-        self.send_header('Content-type', 'application/json')
-        self.end_headers()
-        self.wfile.write(json.dumps({
-            "status": "alive", 
-            "message": "Hello from Vercel isolated environment"
-        }).encode())
-    
-    def do_POST(self): self.do_GET()
-    def do_PUT(self): self.do_GET()
-    def do_DELETE(self): self.do_GET()
-    def do_OPTIONS(self): self.do_GET()
+handler = Mangum(app)

@@ -1,1 +1,6 @@
-# requirements cleared for isolation test
+fastapi
+uvicorn
+sqlalchemy
+pydantic
+psycopg2-binary
+mangum
