@@ -5,13 +5,19 @@ from pydantic import BaseModel
 from typing import List, Optional
 from sqlalchemy import create_engine, Column, Integer, String, Boolean, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Session, relationship
+from sqlalchemy.orm import sessionmaker, Session, relationship, joinedload
 from fastapi.middleware.cors import CORSMiddleware
 import os
 
 # Database Setup
-SQLALCHEMY_DATABASE_URL = "sqlite:///./cards.db"
-engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
+# Database Setup
+# Vercel Postgres provides POSTGRES_URL, ensure it starts with postgresql:// for SQLAlchemy
+database_url = os.getenv("POSTGRES_URL") or os.getenv("DATABASE_URL") or "sqlite:///./cards_v2.db"
+if database_url.startswith("postgres://"):
+    database_url = database_url.replace("postgres://", "postgresql://", 1)
+
+SQLALCHEMY_DATABASE_URL = database_url
+engine = create_engine(SQLALCHEMY_DATABASE_URL)  # check_same_thread is for sqlite only, but acceptable to remove logic if simpler, or keep conditional
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
@@ -20,6 +26,7 @@ class Category(Base):
     __tablename__ = "categories"
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=True, index=True)
+    color = Column(String, default="gold")
     cards = relationship("Card", back_populates="category")
 
 class Card(Base):
@@ -30,12 +37,44 @@ class Card(Base):
     is_favorite = Column(Boolean, default=False)
     category_id = Column(Integer, ForeignKey("categories.id"), nullable=True)
     category = relationship("Category", back_populates="cards")
+    created_at = Column(String, default="")
+    updated_at = Column(String, default="")
 
 Base.metadata.create_all(bind=engine)
+
+# Seed data if empty
+def seed_data():
+    db = SessionLocal()
+    try:
+        if db.query(Category).count() == 0:
+            # Create default categories
+            default_categories = [
+                Category(name='10000', color='blue'),
+                Category(name='Ry', color='crimson'),
+                Category(name='Fit', color='emerald')
+            ]
+            db.add_all(default_categories)
+            db.commit()
+        if db.query(Card).count() == 0:
+            # Create a sample card
+            from datetime import datetime
+            now = datetime.utcnow().isoformat() + 'Z'
+            sample_card = Card(
+                title='示例卡片', 
+                content='这是一条示例内容。', 
+                is_favorite=False,
+                created_at=now,
+                updated_at=now
+            )
+            db.add(sample_card)
+            db.commit()
+    finally:
+        db.close()
 
 # Pydantic Schemas
 class CategoryBase(BaseModel):
     name: str
+    color: str = "gold"
 
 class CategoryCreate(CategoryBase):
     pass
@@ -51,8 +90,11 @@ class CardBase(BaseModel):
     is_favorite: bool = False
     category_id: Optional[int] = None
 
-class CardCreate(CardBase):
-    pass
+class CardCreate(BaseModel):
+    title: str
+    content: str
+    is_favorite: bool = False
+    category_id: Optional[int] = None
 
 class CardUpdate(BaseModel):
     title: Optional[str] = None
@@ -62,6 +104,9 @@ class CardUpdate(BaseModel):
 
 class CardResponse(CardBase):
     id: int
+    created_at: Optional[str] = None
+    updated_at: Optional[str] = None
+    category: Optional[CategoryResponse] = None
     class Config:
         orm_mode = True
 
@@ -84,17 +129,51 @@ def get_db():
     finally:
         db.close()
 
+# Call seed_data on startup
+@app.on_event("startup")
+def startup_event():
+    seed_data()
+
 # Routes
 @app.post("/api/categories", response_model=CategoryResponse)
 def create_category(category: CategoryCreate, db: Session = Depends(get_db)):
     db_category = db.query(Category).filter(Category.name == category.name).first()
     if db_category:
         raise HTTPException(status_code=400, detail="Category already exists")
-    new_category = Category(name=category.name)
+    new_category = Category(name=category.name, color=category.color)
     db.add(new_category)
     db.commit()
     db.refresh(new_category)
     return new_category
+
+
+
+@app.put("/api/categories/{category_id}", response_model=CategoryResponse)
+def update_category(category_id: int, category: CategoryCreate, db: Session = Depends(get_db)):
+    db_category = db.query(Category).filter(Category.id == category_id).first()
+    if not db_category:
+        raise HTTPException(status_code=404, detail="Category not found")
+    
+    db_category.name = category.name
+    db_category.color = category.color
+    db.commit()
+    db.refresh(db_category)
+    return db_category
+
+@app.delete("/api/categories/{category_id}")
+def delete_category(category_id: int, db: Session = Depends(get_db)):
+    db_category = db.query(Category).filter(Category.id == category_id).first()
+    if not db_category:
+        raise HTTPException(status_code=404, detail="Category not found")
+    
+    # Optional: Handle cards associated with this category
+    # For now, we'll just set their category_id to NULL (or let them be if nullable)
+    # SQLAlchemy relationship might handle this depending on cascade settings, 
+    # but our model has nullable=True for category_id, so they will just become uncategorized.
+    
+    db.delete(db_category)
+    db.commit()
+    return {"ok": True}
 
 @app.get("/api/categories", response_model=List[CategoryResponse])
 def read_categories(db: Session = Depends(get_db)):
@@ -102,15 +181,19 @@ def read_categories(db: Session = Depends(get_db)):
 
 @app.post("/api/cards", response_model=CardResponse)
 def create_card(card: CardCreate, db: Session = Depends(get_db)):
-    new_card = Card(**card.dict())
+    from datetime import datetime
+    now = datetime.utcnow().isoformat() + 'Z'
+    new_card = Card(**card.dict(), created_at=now, updated_at=now)
     db.add(new_card)
     db.commit()
     db.refresh(new_card)
-    return new_card
+    # Eager load category to include in response
+    db_card = db.query(Card).options(joinedload(Card.category)).filter(Card.id == new_card.id).first()
+    return db_card
 
 @app.get("/api/cards", response_model=List[CardResponse])
 def read_cards(db: Session = Depends(get_db)):
-    return db.query(Card).all()
+    return db.query(Card).options(joinedload(Card.category)).all()
 
 @app.put("/api/cards/{card_id}", response_model=CardResponse)
 def update_card(card_id: int, card: CardUpdate, db: Session = Depends(get_db)):
@@ -118,12 +201,17 @@ def update_card(card_id: int, card: CardUpdate, db: Session = Depends(get_db)):
     if not db_card:
         raise HTTPException(status_code=404, detail="Card not found")
     
+    from datetime import datetime
+    now = datetime.utcnow().isoformat() + 'Z'
+    
     update_data = card.dict(exclude_unset=True)
     for key, value in update_data.items():
         setattr(db_card, key, value)
     
+    db_card.updated_at = now
     db.commit()
-    db.refresh(db_card)
+    # Eager load category to include in response
+    db_card = db.query(Card).options(joinedload(Card.category)).filter(Card.id == card_id).first()
     return db_card
 
 @app.delete("/api/cards/{card_id}")
@@ -137,7 +225,6 @@ def delete_card(card_id: int, db: Session = Depends(get_db)):
     return {"ok": True}
 
 # Serve static files (for production)
-import os
 if os.path.exists("backend/static"):
     app.mount("/assets", StaticFiles(directory="backend/static/assets"), name="assets")
     

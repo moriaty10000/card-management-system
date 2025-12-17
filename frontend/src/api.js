@@ -46,15 +46,32 @@ export const api = {
         return res.json();
     },
 
-    async createCategory(category) {
-        const res = await fetch(`${API_BASE}/categories`, {
+    createCategory(category) {
+        return fetch(`${API_BASE}/categories`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Bypass-Tunnel-Reminder': 'true'
             },
             body: JSON.stringify(category),
+        }).then(res => res.json());
+    },
+
+    updateCategory(id, updates) {
+        return fetch(`${API_BASE}/categories/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Bypass-Tunnel-Reminder': 'true'
+            },
+            body: JSON.stringify(updates),
+        }).then(res => res.json());
+    },
+
+    deleteCategory(id) {
+        return fetch(`${API_BASE}/categories/${id}`, {
+            method: 'DELETE',
+            headers: { 'Bypass-Tunnel-Reminder': 'true' }
         });
-        return res.json();
     },
 };
